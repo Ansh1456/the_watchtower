@@ -60,15 +60,15 @@ def get_user_system_info(user=None):
     if user:
         try:
             profile = user.userprofile
-            if profile.latest_cpu is not None:
+            if profile.latest_cpu and profile.latest_cpu > 0:
                 info['cpu_usage'] = profile.latest_cpu
-            if profile.latest_ram is not None:
+            if profile.latest_ram and profile.latest_ram > 0:
                 info['ram_percent'] = profile.latest_ram
-            if profile.latest_disk is not None:
+            if profile.latest_disk and profile.latest_disk > 0:
                 info['disk_usage'] = profile.latest_disk
-            if profile.latest_disk_total is not None:
+            if profile.latest_disk_total and profile.latest_disk_total > 0:
                 info['disk_total'] = profile.latest_disk_total
-            if profile.latest_disk_free is not None:
+            if profile.latest_disk_free and profile.latest_disk_free > 0:
                 info['disk_free'] = profile.latest_disk_free
         except:
             pass
