@@ -4,6 +4,9 @@ set -e
 # Run database migrations
 python manage.py migrate --noinput
 
+# Auto-create superuser if environment variables are set
+python create_admin.py
+
 # Collect static files
 python manage.py collectstatic --noinput
 

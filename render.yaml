@@ -30,3 +30,9 @@ services:
         sync: false # User must input this manually from Upstash
       - key: CELERY_RESULT_BACKEND
         sync: false # User must input this manually from Upstash
+      - key: ADMIN_USER
+        sync: false # e.g. "admin"
+      - key: ADMIN_EMAIL
+        sync: false # e.g. "admin@example.com"
+      - key: ADMIN_PASS
+        sync: false # Superuser password
