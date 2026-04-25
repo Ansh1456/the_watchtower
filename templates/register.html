@@ -1,0 +1,53 @@
+{% extends "auth_base.html" %}
+{% block title %}Register — The Watchtower{% endblock %}
+{% block content %}
+<div class="glass rounded-2xl p-8 sm:p-10 relative overflow-hidden backdrop-blur-xl border border-emerald-500/20">
+    <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_#34d399]"></div>
+
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-white tracking-wide mt-2">REGISTER</h2>
+        <p class="text-[11px] text-emerald-400 font-mono uppercase tracking-widest mt-1">Initiate Node Clearance</p>
+    </div>
+
+    <form method="POST" class="space-y-4">
+        {% csrf_token %}
+
+        <input type="text" name="fullname" placeholder="Full Name" required
+               class="w-full bg-[#0a1526]/60 border border-[#1a2744] focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/20 text-white text-sm rounded-xl px-5 py-3 outline-none transition-all placeholder-slate-500 font-mono">
+
+        <div class="grid grid-cols-2 gap-3">
+            <input type="text" name="username" placeholder="Username" required
+                   class="w-full bg-[#0a1526]/60 border border-[#1a2744] focus:border-emerald-400 text-white text-sm rounded-xl px-5 py-3 outline-none transition-all placeholder-slate-500 font-mono">
+            <input type="email" name="email" placeholder="Email" required
+                   class="w-full bg-[#0a1526]/60 border border-[#1a2744] focus:border-emerald-400 text-white text-sm rounded-xl px-5 py-3 outline-none transition-all placeholder-slate-500 font-mono">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <input type="text" name="phone" placeholder="Phone (opt)"
+                   class="w-full bg-[#0a1526]/60 border border-[#1a2744] focus:border-emerald-400 text-white text-sm rounded-xl px-5 py-3 outline-none transition-all placeholder-slate-500 font-mono">
+            <input type="text" name="department" placeholder="Dep. (opt)"
+                   class="w-full bg-[#0a1526]/60 border border-[#1a2744] focus:border-emerald-400 text-white text-sm rounded-xl px-5 py-3 outline-none transition-all placeholder-slate-500 font-mono">
+        </div>
+
+        <input type="password" name="password" placeholder="Password" required
+               class="w-full bg-[#0a1526]/60 border border-[#1a2744] focus:border-emerald-400 text-white text-sm rounded-xl px-5 py-3 outline-none transition-all placeholder-slate-500 font-mono">
+
+        <input type="password" name="confirm_password" placeholder="Confirm Password" required
+               class="w-full bg-[#0a1526]/60 border border-[#1a2744] focus:border-emerald-400 text-white text-sm rounded-xl px-5 py-3 outline-none transition-all placeholder-slate-500 font-mono">
+
+        <button type="submit"
+                class="w-full py-3.5 mt-2 rounded-xl text-sm font-bold uppercase tracking-widest transition-all
+                       bg-gradient-to-r from-emerald-500/20 to-teal-600/20 border border-emerald-500/40 text-white
+                       hover:from-emerald-500/40 hover:to-teal-600/40 hover:shadow-[0_0_25px_rgba(52,211,153,0.3)]
+                       flex items-center justify-center gap-2">
+            Submit Request
+        </button>
+    </form>
+
+    <div class="mt-6 pt-5 border-t border-[#1a2744] text-center">
+        <a href="/" class="text-sm font-semibold text-slate-400 hover:text-emerald-400 transition-colors hover:tracking-wide">
+            <i class="fas fa-arrow-left text-xs mr-1"></i> Return to Login
+        </a>
+    </div>
+</div>
+{% endblock %}

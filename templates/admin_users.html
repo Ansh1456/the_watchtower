@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+{% block page_title %}
+    <i class="fas fa-users-gear text-[#00d4ff] mr-2"></i> User Management
+{% endblock %}
+
+{% block topbar_extra %}
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg glass-panel hover-card text-xs font-mono text-wt-muted">
+    <i class="fas fa-server text-[#00d4ff]"></i> {{ users|length }} registered
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-6 fade-up d1">
+    <p class="text-sm text-wt-muted">Manage operators, permissions, and system access.</p>
+</div>
+
+<div class="glass-panel hover-card rounded-xl overflow-hidden fade-up d2">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-wt-glass border-b border-wt-border">
+                    <th class="py-4 px-5 text-[10px] font-bold text-wt-muted uppercase tracking-widest">Operator</th>
+                    <th class="py-4 px-5 text-[10px] font-bold text-wt-muted uppercase tracking-widest">Role</th>
+                    <th class="py-4 px-5 text-[10px] font-bold text-wt-muted uppercase tracking-widest">Status</th>
+                    <th class="py-4 px-5 text-[10px] font-bold text-wt-muted uppercase tracking-widest">Joined</th>
+                    <th class="py-4 px-5 text-[10px] font-bold text-wt-muted uppercase tracking-widest text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-wt-border/50">
+                {% for user in users %}
+                <tr class="hover:glass-panel/30 transition-colors group">
+
+                    <!-- Operator -->
+                    <td class="py-4 px-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400 font-bold text-sm shrink-0">
+                                {{ user.username|make_list|first|upper }}
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">{{ user.username }}
+                                    <span class="text-[10px] text-wt-muted font-mono ml-1">#{{ user.id }}</span>
+                                </p>
+                                <p class="text-xs text-wt-muted">{{ user.email }}</p>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Role -->
+                    <td class="py-4 px-5">
+                        {% if user.is_staff %}
+                        <span class="pill bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                            <i class="fas fa-shield-halved"></i> Admin
+                        </span>
+                        {% else %}
+                        <span class="pill bg-wt-border/60 border border-wt-border text-wt-muted">
+                            <i class="fas fa-user"></i> Operator
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Status -->
+                    <td class="py-4 px-5">
+                        {% if user.is_active %}
+                        <span class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wide">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                            </span>
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="flex items-center gap-2 text-xs font-bold text-rose-500 uppercase tracking-wide">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span> Disabled
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Joined -->
+                    <td class="py-4 px-5 text-xs text-wt-muted font-mono">
+                        {{ user.date_joined|date:"Y-m-d" }}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="py-4 px-5">
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{% url 'view_user_system' user.id %}"
+                               title="View System"
+                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                      bg-[#00d4ff]/8 border border-[#00d4ff]/20 text-[#00d4ff]
+                                      hover:bg-[#00d4ff]/20 hover:shadow-[0_0_10px_rgba(0,212,255,0.2)]
+                                      transition-all text-xs">
+                                <i class="fas fa-desktop"></i>
+                            </a>
+                            <a href="{% url 'delete_user' user.id %}"
+                               title="Delete User"
+                               onclick="return confirm('Delete operator {{ user.username }}? This cannot be undone.')"
+                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                      bg-rose-500/8 border border-rose-500/20 text-rose-400
+                                      hover:bg-rose-500/20 hover:shadow-[0_0_10px_rgba(244,63,94,0.2)]
+                                      transition-all text-xs">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="py-16 text-center text-wt-muted text-sm">
+                        <i class="fas fa-users text-2xl mb-3 block text-wt-border"></i>
+                        No operators registered yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

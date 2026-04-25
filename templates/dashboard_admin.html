@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}
+    <i class="fas fa-shield-halved text-[#00d4ff] mr-2"></i> Command Center
+{% endblock %}
+
+{% block topbar_extra %}
+<a href="{% url 'admin_users' %}"
+   class="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide
+          bg-[#00d4ff]/10 border border-[#00d4ff]/25 text-[#00d4ff]
+          hover:bg-[#00d4ff]/20 hover:shadow-[0_0_16px_rgba(0,212,255,0.2)] transition-all">
+    <i class="fas fa-users-gear"></i> Manage Users
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-7 fade-up d1">
+    <h2 class="text-xl font-semibold text-white">System Overview</h2>
+    <p class="text-sm text-wt-muted mt-1">High-level metrics for all nodes and operators.</p>
+</div>
+
+<!-- User stat cards -->
+<div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div class="glass-panel hover-card rounded-xl p-5 flex items-center gap-4 fade-up d1 hover:border-blue-500/25 transition-colors">
+        <div class="w-11 h-11 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-lg shrink-0">
+            <i class="fas fa-users"></i>
+        </div>
+        <div>
+            <p class="text-[10px] text-wt-muted font-bold uppercase tracking-widest">Total Users</p>
+            <p class="text-3xl font-bold text-white font-mono mt-0.5">{{ total_users }}</p>
+        </div>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-5 flex items-center gap-4 fade-up d2 hover:border-emerald-500/25 transition-colors">
+        <div class="w-11 h-11 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg shrink-0">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div>
+            <p class="text-[10px] text-wt-muted font-bold uppercase tracking-widest">Active</p>
+            <p class="text-3xl font-bold text-white font-mono mt-0.5">{{ active_users }}</p>
+        </div>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-5 flex items-center gap-4 fade-up d3 hover:border-purple-500/25 transition-colors">
+        <div class="w-11 h-11 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg shrink-0">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div>
+            <p class="text-[10px] text-wt-muted font-bold uppercase tracking-widest">Admins</p>
+            <p class="text-3xl font-bold text-white font-mono mt-0.5">{{ admin_users }}</p>
+        </div>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-5 flex items-center gap-4 fade-up d4 hover:border-amber-500/25 transition-colors">
+        <div class="w-11 h-11 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg shrink-0">
+            <i class="fas fa-clock-rotate-left"></i>
+        </div>
+        <div>
+            <p class="text-[10px] text-wt-muted font-bold uppercase tracking-widest">Uptime</p>
+            <p class="text-3xl font-bold text-white font-mono mt-0.5">{{ system_uptime }}<span class="text-sm text-wt-muted font-normal ml-1">h</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- Map Section -->
+<div class="mb-8 fade-up d3 grid grid-cols-1 lg:grid-cols-4 gap-4">
+    <!-- User List Panel -->
+    <div class="col-span-1 glass-panel hover-card rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] h-[450px] flex flex-col">
+        <h3 class="text-xs font-bold text-wt-muted tracking-widest uppercase mb-3 border-b border-wt-border pb-2"><i class="fas fa-satellite-dish mr-2 text-indigo-400"></i> Active Signals</h3>
+        
+        <div id="userList" class="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+            <!-- Populated by JS -->
+            <div class="text-center text-wt-muted text-xs font-mono mt-10 animate-pulse">Scanning endpoints...</div>
+        </div>
+    </div>
+    
+    <!-- Leaflet Map -->
+    <div class="col-span-1 lg:col-span-3">
+        <div class="flex items-center justify-between mb-3 pl-1">
+            <h3 class="text-sm font-bold text-white tracking-widest uppercase"><i class="fas fa-globe-americas mr-2 text-wt-cyan"></i> Global Operators Map</h3>
+        </div>
+        <div id="worldMap" class="h-[415px] w-full rounded-xl border border-wt-border shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] relative z-0"></div>
+    </div>
+</div>
+
+<!-- Live hardware metrics -->
+<div class="flex items-center justify-between mb-3 fade-up d4">
+    <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest">Live Hardware Metrics</p>
+    <button id="adminSpeedTestBtn" onclick="runAdminSpeedTest()"
+            class="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide
+                   glass-panel hover-card text-wt-muted
+                   hover:text-white hover:border-slate-600 transition-all">
+        <i class="fas fa-satellite-dish" id="adminSpeedIcon"></i> <span id="adminSpeedLabel">Run Speed Test</span>
+    </button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 fade-up d5">
+
+    <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-blue-500/25 transition-colors">
+        <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2"><i class="fas fa-microchip mr-1"></i>CPU</p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.cpu_usage }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-emerald-500/25 transition-colors">
+        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2"><i class="fas fa-memory mr-1"></i>RAM Max</p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.ram_total }}<span class="text-xs text-wt-muted ml-0.5">GB</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-purple-500/25 transition-colors">
+        <p class="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2"><i class="fas fa-bolt mr-1"></i>RAM %</p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.ram_percent }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-rose-500/25 transition-colors">
+        <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2"><i class="fas fa-hard-drive mr-1"></i>Disk</p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.disk_usage }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-[#00d4ff]/25 transition-colors">
+        <p class="text-[10px] font-bold text-[#00d4ff] uppercase tracking-widest mb-2"><i class="fas fa-arrow-down mr-1"></i>Down</p>
+        <p class="text-2xl font-light text-white font-mono" id="adminDl">—<span class="text-xs text-wt-muted ml-0.5">Mb</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-fuchsia-500/25 transition-colors">
+        <p class="text-[10px] font-bold text-fuchsia-400 uppercase tracking-widest mb-2"><i class="fas fa-arrow-up mr-1"></i>Up</p>
+        <p class="text-2xl font-light text-white font-mono" id="adminUl">—<span class="text-xs text-wt-muted ml-0.5">Mb</span></p>
+    </div>
+</div>
+</div>
+
+<!-- Leaflet Imports and Map Script -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<style>
+    /* Styling leaflet popups for dark mode */
+    .leaflet-popup-content-wrapper {
+        background: #0d1424;
+        color: #e2e8f0;
+        border: 1px solid #1a2744;
+        border-radius: 0.5rem;
+    }
+    .leaflet-popup-tip {
+        background: #0d1424;
+        border: 1px solid #1a2744;
+    }
+    
+    /* Custom scrollbar for user list */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(13, 20, 36, 0.5); 
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 212, 255, 0.2); 
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 212, 255, 0.5); 
+    }
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var map = L.map('worldMap', {
+            center: [20.0, 0.0],
+            zoom: 2,
+            zoomControl: false,
+            scrollWheelZoom: false
+        });
+        
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(map);
+
+        window.mapMarkers = {}; // Store markers for zooming from list
+
+        fetch('/api/map-data/')
+            .then(response => response.json())
+            .then(data => {
+                const userListContainer = document.getElementById("userList");
+                userListContainer.innerHTML = ""; // clear loading text
+
+                data.forEach(user => {
+                    var marker = L.marker([user.lat, user.lng]).addTo(map);
+                    window.mapMarkers[user.id] = marker;
+                    
+                    const roleColor = user.is_admin ? "text-purple-400" : "text-emerald-400";
+                    const roleIcon = user.is_admin ? "fa-user-shield" : "fa-user";
+                    const roleLabel = user.is_admin ? "Admin" : "User";
+
+                    const statusColor = user.is_active ? "bg-emerald-500" : "bg-rose-500";
+                    const statusText = user.is_active ? "Online" : "Offline";
+                    const statusTextColor = user.is_active ? "text-emerald-400" : "text-rose-400";
+                    const pulseClass = user.is_active ? "animate-pulse" : "";
+
+                    const cpuW = Math.min(100, Math.max(0, user.cpu));
+                    const ramW = Math.min(100, Math.max(0, user.ram));
+                    const diskW = Math.min(100, Math.max(0, user.disk));
+
+                    var popupContent = `
+                        <div class="p-2 w-56 font-sans">
+                            <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+                                <div>
+                                    <h4 class="font-bold text-white text-sm leading-none m-0 p-0 mb-1">${user.username}</h4>
+                                    <div class="flex items-center gap-1">
+                                        <i class="fas ${roleIcon} ${roleColor} text-[10px]"></i>
+                                        <span class="text-[9px] uppercase tracking-widest ${roleColor}">${roleLabel}</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <div class="flex items-center bg-[#060c18]/80 px-2 py-1 rounded border border-white/5">
+                                        <span class="w-1.5 h-1.5 rounded-full ${statusColor} ${pulseClass} mr-1.5 shadow-[0_0_5px_currentColor]"></span>
+                                        <span class="text-[9px] font-bold uppercase tracking-widest ${statusTextColor}">${statusText}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 px-1">
+                                <p class="text-[10px] text-slate-400 m-0"><i class="fas fa-location-crosshairs text-[#00d4ff] mr-1 opacity-70"></i> <span class="font-mono">${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}</span></p>
+                            </div>
+
+                            <div class="space-y-2.5 mt-1 bg-[#060c18]/70 p-3 rounded-lg border border-white/5 shadow-inner">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider"><i class="fas fa-microchip mr-1.5"></i>CPU</span>
+                                        <span class="text-[10px] text-white font-mono">${user.cpu.toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800/80 rounded-full h-1 overflow-hidden"><div class="bg-blue-500 h-1 rounded-full shadow-[0_0_5px_rgba(59,130,246,0.6)]" style="width: ${cpuW}%"></div></div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider"><i class="fas fa-memory mr-1.5"></i>RAM</span>
+                                        <span class="text-[10px] text-white font-mono">${user.ram.toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800/80 rounded-full h-1 overflow-hidden"><div class="bg-emerald-500 h-1 rounded-full shadow-[0_0_5px_rgba(16,185,129,0.6)]" style="width: ${ramW}%"></div></div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider"><i class="fas fa-hard-drive mr-1.5"></i>DISK</span>
+                                        <span class="text-[10px] text-white font-mono">${user.disk.toFixed(1)}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800/80 rounded-full h-1 overflow-hidden"><div class="bg-rose-500 h-1 rounded-full shadow-[0_0_5px_rgba(244,63,94,0.6)]" style="width: ${diskW}%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    marker.bindPopup(popupContent);
+
+                    // Create list item dynamically
+                    const listHtml = `
+                        <button onclick="zoomToUser(${user.id}, ${user.lat}, ${user.lng})" class="w-full text-left p-2.5 rounded-lg border border-wt-border/50 bg-[#060c18]/50 hover:bg-[#00d4ff]/10 hover:border-[#00d4ff]/30 transition-all group flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-md bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-[#00d4ff]/20 group-hover:border-[#00d4ff]/50 transition-colors">
+                                    <i class="fas ${roleIcon} ${roleColor} text-[10px]"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-mono text-white group-hover:text-[#00d4ff] transition-colors leading-tight">${user.username}</p>
+                                    <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">${roleLabel}</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-crosshairs text-slate-600 text-xs opacity-0 group-hover:opacity-100 group-hover:text-[#00d4ff] transition-all -translate-x-2 group-hover:translate-x-0"></i>
+                        </button>
+                    `;
+                    userListContainer.insertAdjacentHTML('beforeend', listHtml);
+                });
+            })
+            .catch(err => console.error("Could not load map data", err));
+            
+        // Global function attached to window for inline onclick
+        window.zoomToUser = function(id, lat, lng) {
+            map.flyTo([lat, lng], 13, {
+                duration: 1.5,
+                easeLinearity: 0.25
+            });
+            setTimeout(() => {
+                if(window.mapMarkers[id]) {
+                    window.mapMarkers[id].openPopup();
+                }
+            }, 1600); // open popup slightly after zoom finishes
+        };
+    });
+</script>
+<script>
+async function runAdminSpeedTest() {
+    const btn = document.getElementById('adminSpeedTestBtn');
+    const icon = document.getElementById('adminSpeedIcon');
+    const label = document.getElementById('adminSpeedLabel');
+    const dlVal = document.getElementById('adminDl');
+    const ulVal = document.getElementById('adminUl');
+
+    btn.disabled = true;
+    icon.className = 'fas fa-spinner fa-spin';
+    label.textContent = 'Testing...';
+    dlVal.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
+    ulVal.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
+
+    try {
+        const res = await fetch('/api/network-speed/');
+        const data = await res.json();
+
+        if (data.download !== undefined) {
+            dlVal.innerHTML = data.download + '<span class="text-xs text-wt-muted ml-0.5">Mb</span>';
+            ulVal.innerHTML = data.upload + '<span class="text-xs text-wt-muted ml-0.5">Mb</span>';
+        } else {
+            dlVal.innerHTML = 'N/A';
+            ulVal.innerHTML = 'N/A';
+        }
+    } catch(e) {
+        dlVal.innerHTML = 'Err';
+        ulVal.innerHTML = 'Err';
+    }
+
+    icon.className = 'fas fa-satellite-dish';
+    label.textContent = 'Run Again';
+    btn.disabled = false;
+}
+</script>
+{% endblock %}

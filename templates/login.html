@@ -1,0 +1,49 @@
+{% extends "auth_base.html" %}
+{% block title %}Login — The Watchtower{% endblock %}
+{% block content %}
+<div class="glass rounded-2xl p-8 sm:p-10 relative overflow-hidden backdrop-blur-xl border border-wt-cyan/20">
+    <!-- top accent line -->
+    <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#00d4ff] to-transparent shadow-[0_0_15px_#00d4ff]"></div>
+
+    <!-- Brand -->
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-white tracking-widest mt-2">ACCESS</h2>
+        <p class="text-xs text-[#00d4ff] font-mono uppercase tracking-widest mt-1 opacity-80">Authenticate to continue</p>
+    </div>
+
+    <form method="POST" class="space-y-5">
+        {% csrf_token %}
+
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-user text-[#00d4ff]/70 text-sm"></i>
+            </div>
+            <input name="username" type="text" placeholder="Operator ID" required
+                   class="w-full bg-[#0a1526]/60 border border-[#1a2744] hover:border-[#00d4ff]/30 focus:border-[#00d4ff] focus:ring-1 focus:ring-[#00d4ff]/30 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 outline-none transition-all placeholder-slate-500 font-mono">
+        </div>
+
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-lock text-[#00d4ff]/70 text-sm"></i>
+            </div>
+            <input name="password" type="password" placeholder="Passcode" required
+                   class="w-full bg-[#0a1526]/60 border border-[#1a2744] hover:border-[#00d4ff]/30 focus:border-[#00d4ff] focus:ring-1 focus:ring-[#00d4ff]/30 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 outline-none transition-all placeholder-slate-500 font-mono">
+        </div>
+
+        <button type="submit"
+                class="w-full mt-4 py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest transition-all
+                       bg-gradient-to-r from-[#00d4ff]/20 to-blue-600/20 border border-[#00d4ff]/40 text-white
+                       hover:from-[#00d4ff]/40 hover:to-blue-600/40 hover:shadow-[0_0_25px_rgba(0,212,255,0.4)]
+                       flex items-center justify-center gap-2">
+            Initialize Session
+        </button>
+    </form>
+
+    <div class="mt-8 pt-6 border-t border-[#1a2744] text-center">
+        <p class="text-xs text-slate-500 mb-2 font-mono">GUEST IDENTIFIED</p>
+        <a href="/register/" class="inline-block text-sm font-semibold text-slate-300 hover:text-[#00d4ff] transition-all hover:tracking-wide">
+            Request Clearance <span class="text-[#00d4ff] ml-1">→</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

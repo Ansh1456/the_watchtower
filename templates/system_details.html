@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}System Details{% endblock %}
+{% block page_title %}
+    <i class="fas fa-microchip text-[#00d4ff] mr-2"></i> Hardware Diagnostics
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-6 fade-up d1">
+    {% if target_user %}
+    <p class="text-sm text-wt-muted">Viewing system data for operator: <span class="text-white font-semibold">{{ target_user.username }}</span></p>
+    {% else %}
+    <p class="text-sm text-wt-muted">Deep-level hardware specifications for the host machine.</p>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Compute engine card -->
+    <div class="lg:col-span-2 glass-panel hover-card rounded-xl overflow-hidden fade-up d2">
+        <div class="px-6 py-4 border-b border-wt-border flex items-center gap-3 glass-panel/50">
+            <i class="fas fa-server text-wt-muted text-sm"></i>
+            <h3 class="font-bold text-slate-300 text-xs uppercase tracking-widest">Compute Engine</h3>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest mb-2">Operating System</p>
+                <p class="text-lg font-bold text-white font-mono flex items-center gap-2">
+                    <i class="fab fa-windows text-blue-400"></i> {{ data.os }}
+                </p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest mb-2">System Uptime</p>
+                <p class="text-lg font-light text-white font-mono">{{ data.uptime }} <span class="text-sm text-wt-muted font-bold">hrs</span></p>
+            </div>
+            <div class="md:col-span-2">
+                <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest mb-2">Processor</p>
+                <div class="bg-wt-bg border border-wt-border rounded-xl p-4 flex items-center gap-4">
+                    <i class="fas fa-cogs text-2xl text-wt-muted/40"></i>
+                    <p class="text-sm font-semibold text-[#00d4ff] font-mono leading-relaxed">{{ data.processor }}</p>
+                </div>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest mb-2">Logical Cores</p>
+                <p class="text-3xl font-light text-white font-mono">{{ data.cpu_cores }}</p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest mb-2">CPU Load</p>
+                <p class="text-3xl font-light text-white font-mono">{{ data.cpu_usage }}<span class="text-sm text-wt-muted ml-1">%</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage & Memory -->
+    <div class="glass-panel hover-card rounded-xl overflow-hidden flex flex-col fade-up d3">
+        <div class="px-6 py-4 border-b border-wt-border flex items-center gap-3 glass-panel/50">
+            <i class="fas fa-database text-wt-muted text-sm"></i>
+            <h3 class="font-bold text-slate-300 text-xs uppercase tracking-widest">Storage & Memory</h3>
+        </div>
+        <div class="p-5 flex-1 flex flex-col gap-4">
+
+            <div class="group bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-5 flex justify-between items-center hover:bg-emerald-500/10 transition-colors">
+                <div>
+                    <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Total RAM</p>
+                    <p class="text-2xl font-light text-white font-mono">{{ data.ram_total }} <span class="text-sm font-bold text-emerald-400">GB</span></p>
+                </div>
+                <i class="fas fa-memory text-3xl text-emerald-500/25 group-hover:text-emerald-400/50 transition-colors"></i>
+            </div>
+
+            <div class="group bg-[#00d4ff]/5 border border-[#00d4ff]/15 rounded-xl p-5 flex justify-between items-center hover:bg-[#00d4ff]/10 transition-colors">
+                <div>
+                    <p class="text-[10px] font-bold text-[#00d4ff] uppercase tracking-widest mb-1">Total Disk</p>
+                    <p class="text-2xl font-light text-white font-mono">{{ data.disk_total }} <span class="text-sm font-bold text-[#00d4ff]">GB</span></p>
+                </div>
+                <i class="fas fa-hard-drive text-3xl text-[#00d4ff]/25 group-hover:text-[#00d4ff]/50 transition-colors"></i>
+            </div>
+
+            <div class="group bg-amber-500/5 border border-amber-500/15 rounded-xl p-5 flex justify-between items-center hover:bg-amber-500/10 transition-colors">
+                <div>
+                    <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">Free Disk</p>
+                    <p class="text-2xl font-light text-white font-mono">{{ data.disk_free }} <span class="text-sm font-bold text-amber-400">GB</span></p>
+                </div>
+                <i class="fas fa-box-open text-3xl text-amber-500/25 group-hover:text-amber-400/50 transition-colors"></i>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

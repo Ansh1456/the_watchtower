@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}The Watchtower{% endblock %} — The Watchtower</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wt: {
+                            bg:      '#050811',
+                            glass:   'rgba(13, 20, 36, 0.45)',
+                            card:    'rgba(17, 27, 46, 0.6)',
+                            border:  'rgba(255, 255, 255, 0.08)',
+                            cyan:    '#00d4ff',
+                            text:    '#e2e8f0',
+                            muted:   '#64748b',
+                            dim:     '#1e3050',
+                        }
+                    },
+                    fontFamily: {
+                        sans:  ['Space Grotesk', 'sans-serif'],
+                        mono:  ['JetBrains Mono', 'monospace'],
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                        sm: '4px',
+                        md: '8px',
+                        lg: '16px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { scroll-behavior: smooth; }
+        body { 
+            background: #050811; 
+            color: #e2e8f0;
+            background-image: radial-gradient(circle at 50% 0%, rgba(0, 212, 255, 0.04) 0%, transparent 60%);
+        }
+
+        /* scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #050811; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00d4ff40; }
+
+        /* MOTION & ANIMATION SYSTEM */
+        :root {
+            --easing-spring: cubic-bezier(0.22, 1, 0.36, 1);
+            --hero: #00d4ff;
+            --hero-glow: rgba(0, 212, 255, 0.3);
+        }
+
+        /* Glass Surface */
+        .glass-panel {
+            background: rgba(13, 20, 36, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Glow Text */
+        .text-glow { text-shadow: 0 0 10px rgba(0, 212, 255, 0.4); }
+        .text-glow-strong { text-shadow: 0 0 15px rgba(0, 212, 255, 0.6), 0 0 30px rgba(0, 212, 255, 0.2); }
+
+        /* Page load sequence */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideRight {
+            from { opacity: 0; transform: translateX(-40px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes softenReveal {
+            0% { opacity: 0; transform: translateY(10px) scale(0.99); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .reveal-grid > * { animation: softenReveal 0.6s var(--easing-spring) backwards; }
+        .reveal-grid > *:nth-child(1) { animation-delay: 50ms; }
+        .reveal-grid > *:nth-child(2) { animation-delay: 100ms; }
+        .reveal-grid > *:nth-child(3) { animation-delay: 150ms; }
+        .reveal-grid > *:nth-child(4) { animation-delay: 200ms; }
+
+        .fade-up { opacity: 0; animation: fadeUp 0.5s var(--easing-spring) forwards; }
+        .fade-down { opacity: 0; animation: fadeDown 0.4s var(--easing-spring) forwards; }
+        .slide-right { opacity: 0; animation: slideRight 0.5s var(--easing-spring) forwards; }
+
+        /* Card hover */
+        .hover-card {
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease;
+        }
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+
+        /* Nav item */
+        .nav-active {
+            color: #00d4ff !important;
+            background: rgba(0,212,255,0.1) !important;
+            border: 1px solid rgba(0,212,255,0.2) !important;
+            box-shadow: inset 0 0 12px rgba(0,212,255,0.05);
+        }
+        .nav-active::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+            background: #00d4ff; box-shadow: 0 0 10px #00d4ff;
+        }
+        .nav-item {
+            transition: all 0.3s ease; border: 1px solid transparent; position: relative; overflow: hidden;
+        }
+        .nav-item:hover {
+            color: #e2e8f0 !important; background: rgba(255,255,255,0.05) !important;
+        }
+
+        /* metric card top stripe */
+        .stripe::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--stripe, rgba(0,212,255,0.5)), transparent);
+            border-radius: 12px 12px 0 0; opacity: 0.5; transition: opacity 0.5s ease;
+        }
+        .hover-card:hover .stripe::before { opacity: 1; }
+
+        /* glowing value */
+        .val-cyan  { color: #00d4ff; text-shadow: 0 0 8px rgba(0,212,255,0.4); }
+        .val-blue  { color: #60a5fa; text-shadow: 0 0 8px rgba(96,165,250,0.4); }
+        .val-green { color: #34d399; text-shadow: 0 0 8px rgba(52,211,153,0.4); }
+        .val-purple{ color: #a78bfa; text-shadow: 0 0 8px rgba(167,139,250,0.4); }
+        .val-amber { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.4); }
+        .val-rose  { color: #fb7185; text-shadow: 0 0 8px rgba(251,113,133,0.4); }
+
+        .bar-track { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.06); overflow: hidden; margin-top: 14px; }
+        .bar-fill { height: 100%; border-radius: 2px; transform-origin: left; transform: scaleX(0); animation: scaleRight 0.9s var(--easing-spring) 0.5s forwards; }
+        @keyframes scaleRight { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    </style>
+</head>
+<body class="bg-wt-bg text-wt-text font-sans flex h-screen overflow-hidden">
+
+<!-- ====== SIDEBAR ====== -->
+<aside class="w-64 glass-panel border-r border-wt-border border-y-0 border-l-0 flex flex-col z-30 shrink-0 slide-right">
+
+    <!-- Logo -->
+    <div class="h-16 flex items-center gap-3 px-5 border-b border-wt-border group select-none">
+        <div class="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-wt-cyan/20 to-blue-500/20 border border-wt-cyan/30 shadow-[0_0_15px_rgba(0,212,255,0.15)] group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-300">
+            <div class="absolute w-2 h-2 rounded-full bg-wt-cyan animate-pulse shadow-[0_0_8px_#00d4ff]"></div>
+            <i class="fas fa-satellite-dish text-wt-cyan text-xs opacity-70"></i>
+        </div>
+        <div class="flex flex-col justify-center">
+            <h1 class="text-base font-bold tracking-widest text-white uppercase m-0 leading-tight">
+                <span class="text-wt-muted text-[10px] lowercase mr-1">The</span>Watchtower
+            </h1>
+            <p class="text-[9px] font-mono text-wt-cyan/80 uppercase tracking-[0.2em] m-0 leading-none mt-0.5">Real-Time Monitoring</p>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 p-3 space-y-1 overflow-y-auto mt-1">
+
+        <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest px-3 pt-2 pb-1">Overview</p>
+
+        {% url 'user_dashboard' as url_user %}
+        <a href="{{ url_user }}" class="nav-item {% if request.path == url_user %}nav-active{% else %}text-wt-muted{% endif %} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fas fa-gauge-high w-4 text-center"></i> Dashboard
+        </a>
+
+        {% if request.user.is_superuser %}
+        {% url 'admin_dashboard' as url_admin %}
+        <a href="{{ url_admin }}" class="nav-item {% if request.path == url_admin %}nav-active{% else %}text-wt-muted{% endif %} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fas fa-shield-halved w-4 text-center"></i> Admin Overview
+        </a>
+        {% endif %}
+
+        <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest px-3 pt-4 pb-1">Monitoring</p>
+
+        {% url 'monitoring' as url_mon %}
+        <a href="{{ url_mon }}" class="nav-item {% if request.path == url_mon %}nav-active{% else %}text-wt-muted{% endif %} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fas fa-chart-line w-4 text-center"></i> Live Monitoring
+        </a>
+
+        {% url 'system_details' as url_det %}
+        <a href="{{ url_det }}" class="nav-item {% if request.path == url_det %}nav-active{% else %}text-wt-muted{% endif %} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fas fa-microchip w-4 text-center"></i> System Details
+        </a>
+
+        {% url 'system_info' as url_info %}
+        <a href="{{ url_info }}" class="nav-item {% if request.path == url_info %}nav-active{% else %}text-wt-muted{% endif %} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fas fa-server w-4 text-center"></i> System Info
+        </a>
+
+        {% if request.user.is_superuser %}
+        <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest px-3 pt-4 pb-1">Admin</p>
+        {% url 'admin_users' as url_users %}
+        <a href="{{ url_users }}" class="nav-item {% if request.path == url_users %}nav-active{% else %}text-wt-muted{% endif %} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fas fa-users-gear w-4 text-center"></i> Manage Users
+        </a>
+        {% endif %}
+
+        <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest px-3 pt-4 pb-1">Data</p>
+        <a href="{% url 'export_telemetry' %}?format=csv" class="nav-item text-wt-muted flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium">
+            <i class="fas fa-file-arrow-down w-4 text-center"></i> Export CSV
+        </a>
+
+    </nav>
+
+    <!-- User footer -->
+    <div class="p-3 border-t border-wt-border">
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg glass-panel hover-card mb-1 hover-card">
+            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-wt-cyan to-blue-500 flex items-center justify-center text-white font-bold text-xs shrink-0 avatar-hover">
+                {{ request.user.username|first|upper }}
+            </div>
+            <div class="min-w-0">
+                <p class="text-white text-xs font-semibold truncate">{{ request.user.username }}</p>
+                <p class="text-wt-muted text-[10px] font-mono">{% if request.user.is_superuser %}admin{% else %}operator{% endif %}</p>
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="nav-item text-rose-500 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-rose-500/10 hover:text-rose-400 btn-hover">
+            <i class="fas fa-right-from-bracket w-4 text-center"></i> Disconnect
+        </a>
+    </div>
+</aside>
+
+<!-- ====== MAIN ====== -->
+<div class="flex-1 flex flex-col min-h-screen overflow-hidden">
+
+    <!-- Top bar -->
+    <header class="h-16 shrink-0 flex items-center justify-between px-8 bg-wt-glass backdrop-blur-md border-b border-wt-border z-20 sticky top-0 fade-down">
+        <div class="flex items-center gap-3">
+            <h1 class="text-base font-semibold text-wt-text tracking-wide text-glow">{% block page_title %}{% endblock %}</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            {% block topbar_extra %}{% endblock %}
+            <div class="glass-panel flex items-center gap-2 px-3 py-1.5 rounded-full cursor-default transition-all duration-300">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-wt-cyan opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-wt-cyan shadow-[0_0_6px_#00d4ff]"></span>
+                </span>
+                <span class="text-xs font-mono text-wt-muted uppercase tracking-wider">Operator: <span class="text-white font-semibold">{{ request.user.username }}</span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="flex-1 overflow-y-auto overflow-x-hidden p-8">
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for msg in messages %}
+            <div class="flex items-center gap-3 px-4 py-3 rounded-lg border text-sm
+                {% if msg.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-300
+                {% elif msg.tags == 'success' %}bg-emerald-500/10 border-emerald-500/30 text-emerald-300
+                {% else %}bg-wt-cyan/10 border-wt-cyan/30 text-wt-cyan{% endif %}">
+                <i class="fas {% if msg.tags == 'error' %}fa-circle-xmark{% elif msg.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"></i>
+                {{ msg }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script>
+    // System-wide Interactions & Scripts
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // KPI Counter Animation
+        const counters = document.querySelectorAll('.kpi-counter');
+        counters.forEach(counter => {
+            // Check if text starts with format like "3.14Gb" -> we only animate numbers
+            const textMatch = counter.innerText.match(/([0-9.]+)/);
+            if (!textMatch) return;
+            
+            const target = parseFloat(textMatch[1]);
+            const duration = 1200; // 1.2s
+            const startTime = performance.now();
+            const easeOut = t => 1 - Math.pow(1 - t, 3);
+            const originalText = counter.innerText;
+            const hasDecimals = originalText.includes('.');
+            
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const currentVal = target * easeOut(progress);
+                const displayVal = hasDecimals ? currentVal.toFixed(1) : Math.floor(currentVal);
+                
+                counter.innerText = originalText.replace(/[0-9.]+/, displayVal);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    counter.innerText = originalText;
+                }
+            };
+            
+            requestAnimationFrame(animate);
+        });
+
+        // GPS Tracking Feature
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Helper to get CSRF token from cookies in Django
+                    function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    fetch('/api/update-location/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            lat: lat,
+                            lng: lng
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            console.log("GPS Location acquired and updated for The Watchtower tracking.");
+                        }
+                    })
+                    .catch(err => console.error("Error updating location:", err));
+                },
+                function(error) {
+                    console.warn("The Watchtower GPS Tracking disabled or denied:", error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            console.warn("Geolocation is not supported by this browser.");
+        }
+    });
+</script>
+
+</body>
+</html>

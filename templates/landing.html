@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Watchtower — Initializing...</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #010205; /* Fallback night sky */
+            font-family: 'JetBrains Mono', monospace;
+        }
+        #webgl-canvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 1;
+        }
+        
+        /* UI Overlay */
+        #ui-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            animation: fadeIn 1s ease 0.5s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .title {
+            color: #ffffff;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 5px rgba(255, 255, 255, 0.4);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        @media (min-width: 768px) { .title { font-size: 1.75rem; border-bottom: none; } }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            animation: textPulse 2s infinite ease-in-out;
+        }
+        @keyframes textPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
+        }
+
+        /* Cinematic Black Screen Transition */
+        #page-transition {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #010205;
+            z-index: 50;
+            opacity: 1;
+            transition: opacity 1.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        /* Fallback for non-webgl */
+        #webgl-fallback {
+            display: none;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: #010205; color: white; z-index: 100;
+            align-items: center; justify-content: center; text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cinematic Start/End transition -->
+    <div id="page-transition"></div>
+
+    <!-- UI -->
+    <div id="ui-overlay">
+        <div class="title">WATCHTOWER INITIALIZING...</div>
+        <div class="subtitle">SCANNING SYSTEM...</div>
+    </div>
+
+    <div id="webgl-canvas">
+        <div id="webgl-fallback">
+            <p>Your browser does not support WebGL. <br> Redirecting...</p>
+        </div>
+    </div>
+
+    <!-- Three.js + PostProcessing via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+    <script>
+        // Check WebGL Check
+        function isWebGLAvailable() {
+            try {
+                const canvas = document.createElement( 'canvas' );
+                return !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) );
+            } catch ( e ) {
+                return false;
+            }
+        }
+
+        if (!isWebGLAvailable()) {
+            document.getElementById('webgl-fallback').style.display = 'flex';
+            setTimeout(() => window.location.href = '/login/', 2000);
+        } else {
+            initCinematicScene();
+        }
+
+        function initCinematicScene() {
+            // --- 1. Scene & Atmosphere Configuration ---
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x02040a); // Deep midnight blue/black
+            
+            // Exponential fog carefully tuned for deep blending
+            scene.fog = new THREE.FogExp2(0x02040a, 0.04);
+
+            // Setup Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Lock ratio for performance
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('webgl-canvas').appendChild(renderer.domElement);
+
+            // Camera Setup
+            const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.5, 32); 
+
+            // Post-Processing Bloom
+            const renderScene = new THREE.RenderPass(scene, camera);
+            // High threshold, low strength, high radius to allow pure whites (like bulb) to glow intensely while darks stay crisp
+            const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
+            bloomPass.threshold = 0.1;
+            bloomPass.strength = 1.0; 
+            bloomPass.radius = 0.5;
+
+            const composer = new THREE.EffectComposer(renderer);
+            composer.addPass(renderScene);
+            composer.addPass(bloomPass);
+
+            // --- 2. Stars & Particle Systems ---
+            // Background Static Stars Layer
+            const bgStarGeo = new THREE.BufferGeometry();
+            const bgStarCount = 2000;
+            const bgStarPos = new Float32Array(bgStarCount * 3);
+            for(let i = 0; i < bgStarCount * 3; i++) {
+                bgStarPos[i] = (Math.random() - 0.5) * 400;
+            }
+            bgStarGeo.setAttribute('position', new THREE.BufferAttribute(bgStarPos, 3));
+            const bgStarMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.4, transparent: true, opacity: 0.8, fog: false });
+            const backgroundStars = new THREE.Points(bgStarGeo, bgStarMat);
+            scene.add(backgroundStars);
+
+            // Drifting Dust / Mist Layer
+            const dustGeo = new THREE.BufferGeometry();
+            const dustCount = 800;
+            const dustPos = new Float32Array(dustCount * 3);
+            for(let i = 0; i < dustCount * 3; i++) {
+                dustPos[i] = (Math.random() - 0.5) * 60;
+                if (i % 3 === 1) dustPos[i] = Math.random() * 25; // Y height distributed upwards
+            }
+            dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+            const dustMat = new THREE.PointsMaterial({ 
+                color: 0xaaccff, size: 0.12, 
+                transparent: true, opacity: 0.5, 
+                blending: THREE.AdditiveBlending 
+            });
+            const dustParticles = new THREE.Points(dustGeo, dustMat);
+            scene.add(dustParticles);
+
+            // --- 3. Base / Ground Setup ---
+            const groundGeo = new THREE.PlaneGeometry(300, 300);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x010203, roughness: 0.2, metalness: 0.1 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Add scattering of simple rocks for ground detail
+            for(let i=0; i < 12; i++){
+                const rockGeo = new THREE.DodecahedronGeometry(Math.random() * 1.5 + 0.8);
+                const rockMat = new THREE.MeshStandardMaterial({ color: 0x0f1118, roughness: 0.9 });
+                const rock = new THREE.Mesh(rockGeo, rockMat);
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * 5 + 3.5; // Circle radius away from tower
+                rock.position.set(Math.cos(angle)*r, 0, Math.sin(angle)*r);
+                rock.rotation.set(Math.random(), Math.random(), Math.random());
+                rock.castShadow = true;
+                rock.receiveShadow = true;
+                scene.add(rock);
+            }
+
+            // --- 4. The Lighthouse ---
+            const lighthouse = new THREE.Group();
+            scene.add(lighthouse);
+
+            // Tower Base
+            const towerGeo = new THREE.CylinderGeometry(1.4, 3.0, 14, 32);
+            // Procedural noise bump map via canvas for realism
+            const noiseCanvas = document.createElement('canvas');
+            noiseCanvas.width = 128; noiseCanvas.height = 128;
+            const ctx = noiseCanvas.getContext('2d');
+            for(let i=0; i<128; i++) {
+                for(let j=0; j<128; j++) {
+                    const c = Math.floor(Math.random()*40 + 200);
+                    ctx.fillStyle = `rgb(${c},${c},${c})`;
+                    ctx.fillRect(i,j,1,1);
+                }
+            }
+            const bumpTexture = new THREE.CanvasTexture(noiseCanvas);
+            bumpTexture.wrapS = THREE.RepeatWrapping;
+            bumpTexture.wrapT = THREE.RepeatWrapping;
+            bumpTexture.repeat.set(4, 8);
+
+            const towerMat = new THREE.MeshStandardMaterial({ 
+                color: 0x181a24, 
+                roughness: 0.9, 
+                metalness: 0.2,
+                bumpMap: bumpTexture,
+                bumpScale: 0.05
+            });
+            const tower = new THREE.Mesh(towerGeo, towerMat);
+            tower.position.y = 7;
+            tower.castShadow = true;
+            tower.receiveShadow = true;
+            lighthouse.add(tower);
+
+            // Lantern Room (Transparent enclosing)
+            const lanternGeo = new THREE.CylinderGeometry(1.2, 1.2, 2.0, 16);
+            const lanternMat = new THREE.MeshStandardMaterial({
+                color: 0x050508, roughness: 0.1, metalness: 0.9,
+                transparent: true, opacity: 0.5
+            });
+            const lantern = new THREE.Mesh(lanternGeo, lanternMat);
+            lantern.position.y = 15;
+            lighthouse.add(lantern);
+
+            // Glowing Bulb
+            const bulbGeo = new THREE.CylinderGeometry(0.3, 0.3, 1.0, 16);
+            const bulbMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: 0xffaa33,
+                emissiveIntensity: 2.5
+            });
+            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            bulb.position.y = 15;
+            lighthouse.add(bulb);
+
+            // Dome / Top
+            const domeGeo = new THREE.SphereGeometry(1.35, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const domeMat = new THREE.MeshStandardMaterial({ color: 0x111118, roughness: 0.7, metalness: 0.5 });
+            const dome = new THREE.Mesh(domeGeo, domeMat);
+            dome.position.y = 16;
+            lighthouse.add(dome);
+
+            // --- 5. Custom Realism Lighting ---
+            // Ambient (low cool tint)
+            const ambient = new THREE.AmbientLight(0x223366, 0.1);
+            scene.add(ambient);
+            
+            // Hemisphere (dim for global base contact avoidance of pitch black rendering defaults)
+            const hemiLight = new THREE.HemisphereLight(0x081020, 0x020408, 0.2);
+            scene.add(hemiLight);
+
+            // Directional Light (Moonlight casting sharp shadow)
+            const dirLight = new THREE.DirectionalLight(0xaaccff, 0.6);
+            dirLight.position.set(-25, 40, -15); // Top-left
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 512;
+            dirLight.shadow.mapSize.height = 512;
+            scene.add(dirLight);
+
+            // Fill Rim Light (back-right to outline the dark tower)
+            const rimLight = new THREE.DirectionalLight(0x445588, 0.45);
+            rimLight.position.set(20, 10, -30);
+            scene.add(rimLight);
+
+            // The Moon sphere emitting glow
+            const moonGeo = new THREE.SphereGeometry(1.8, 16, 16);
+            const moonMat = new THREE.MeshBasicMaterial({color: 0xcceeff});
+            const moon = new THREE.Mesh(moonGeo, moonMat);
+            moon.position.set(-45, 30, -50);
+            scene.add(moon);
+            const moonGlow = new THREE.PointLight(0xaaccff, 1.0, 100);
+            moonGlow.position.copy(moon.position);
+            scene.add(moonGlow);
+
+            // --- 6. Rotating Radar Light Beam ---
+            const beamContainer = new THREE.Group();
+            beamContainer.position.y = 15; // Set pivot at bulb
+            lighthouse.add(beamContainer);
+
+            // The visible beam illusion (Cone)
+            const beamRayGeo = new THREE.ConeGeometry(3.5, 45, 32, 1, true);
+            beamRayGeo.translate(0, -22.5, 0); // shift pivot to apex
+            const beamRayMat = new THREE.MeshBasicMaterial({
+                color: 0xffeedd,
+                transparent: true,
+                opacity: 0.18,
+                blending: THREE.AdditiveBlending,
+                side: THREE.FrontSide,
+                depthWrite: false
+            });
+            const beamRay = new THREE.Mesh(beamRayGeo, beamRayMat);
+            beamRay.rotation.x = Math.PI / 2 + 0.05; // point flat forward, angled down slightly
+            beamContainer.add(beamRay);
+
+            // The real spot light matching beam direction to cast real ground interactions
+            const spotLight = new THREE.SpotLight(0xffcc66, 1.5, 60, Math.PI / 12, 0.8, 1.2);
+            spotLight.position.set(0, 0.5, 0);
+            const spotTarget = new THREE.Object3D();
+            spotTarget.position.set(0, -3, 30);
+            beamContainer.add(spotTarget);
+            spotLight.target = spotTarget;
+            beamContainer.add(spotLight);
+
+            // Intense inner point-light to generate natural bloom
+            const innerPoint = new THREE.PointLight(0xffaa22, 2.0, 15);
+            beamContainer.add(innerPoint);
+
+            // Sprite Lens flare effect at base of beam to soften intersection
+            const flareCanvas = document.createElement('canvas');
+            flareCanvas.width = 64; flareCanvas.height = 64;
+            const fctx = flareCanvas.getContext('2d');
+            const grd = fctx.createRadialGradient(32, 32, 2, 32, 32, 32);
+            grd.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            grd.addColorStop(0.1, 'rgba(255, 200, 100, 0.8)');
+            grd.addColorStop(1, 'rgba(255, 150, 0, 0)');
+            fctx.fillStyle = grd;
+            fctx.beginPath(); fctx.arc(32,32,32,0,Math.PI*2); fctx.fill();
+            const flareMat = new THREE.SpriteMaterial({ 
+                map: new THREE.CanvasTexture(flareCanvas), 
+                blending: THREE.AdditiveBlending, 
+                transparent: true, opacity: 0.9 
+            });
+            const flareSprite = new THREE.Sprite(flareMat);
+            flareSprite.scale.set(3, 3, 1);
+            flareSprite.position.z = 0.5; // Offset slightly towards camera
+            beamContainer.add(flareSprite);
+
+
+            // --- 7. Animation Loop ---
+            const clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const dt = clock.getDelta();
+                const time = clock.getElapsedTime();
+
+                // Smooth Continuous rotation independent of frame drops
+                // y rotation increases strictly relative to time elapsed
+                beamContainer.rotation.y -= 1.0 * dt;
+
+                // Emissive pulsation
+                bulbMat.emissiveIntensity = 2.0 + Math.sin(time * 2.5) * 0.4;
+                innerPoint.intensity = 1.5 + Math.sin(time * 2.5) * 0.3;
+
+                // Particle systems drift
+                dustParticles.position.y += 0.2 * dt;
+                dustParticles.rotation.y += 0.05 * dt;
+                if (dustParticles.position.y > 15) dustParticles.position.y -= 15;
+
+                // Cinematic Dolly In / floating observer motion
+                // Dolly Z from 32 -> 24 slowly over 5 seconds
+                let targetZ = 32 - (time * 1.6);
+                if (targetZ < 24) targetZ = 24; 
+                
+                // Sinusoidal offset
+                camera.position.x = Math.sin(time * 0.2) * 1.5;
+                camera.position.y = 1.5 + Math.cos(time * 0.35) * 0.4;
+                camera.position.z = targetZ;
+
+                // Look slightly tracking
+                camera.lookAt(Math.sin(time * 0.1) * 0.5, 9 + Math.sin(time * 0.2) * 0.5, 0);
+
+                // Render composer for bloom effect
+                composer.render();
+            }
+
+            // --- 8. Event Listeners & Redirect Timers ---
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                composer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Initial DOM startup sequence
+            setTimeout(() => {
+                const screenTransition = document.getElementById('page-transition');
+                const overlay = document.getElementById('ui-overlay');
+                
+                // Remove black screen
+                screenTransition.style.opacity = '0';
+                
+                // Start exiting 5.5s in
+                setTimeout(() => {
+                    screenTransition.style.opacity = '1';
+                    overlay.style.opacity = '0'; // UI fade out
+                }, 5500);
+
+                // Force hard routing underneath transition at 6s
+                setTimeout(() => {
+                    window.location.href = '/login/';
+                }, 7000);
+            }, 100);
+
+            // Start loop
+            animate();
+        }
+    </script>
+</body>
+</html>

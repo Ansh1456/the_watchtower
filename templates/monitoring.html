@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block title %}Live Monitoring{% endblock %}
+{% block page_title %}
+    <span class="relative flex h-2.5 w-2.5 mr-2 inline-block">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00d4ff] opacity-60"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00d4ff]"></span>
+    </span>
+    Live Monitoring
+{% endblock %}
+
+{% block topbar_extra %}
+<span class="text-[10px] font-bold font-mono uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg" id="topStatus">
+    Syncing...
+</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- Live stat cards -->
+<div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden fade-up d1 hover:border-blue-500/25 transition-colors">
+        <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500 rounded-l-xl"></div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-2 ml-2">CPU Load</p>
+        <p class="text-4xl font-light text-white font-mono ml-2" id="cpuStat">0<span class="text-xl text-blue-400 font-bold ml-1">%</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden fade-up d2 hover:border-emerald-500/25 transition-colors">
+        <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-emerald-400 rounded-l-xl"></div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-2 ml-2">Memory</p>
+        <p class="text-4xl font-light text-white font-mono ml-2" id="ramStat">0<span class="text-xl text-emerald-400 font-bold ml-1">%</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden fade-up d3 hover:border-[#00d4ff]/25 transition-colors">
+        <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-[#00d4ff] rounded-l-xl"></div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-2 ml-2">Disk</p>
+        <p class="text-4xl font-light text-white font-mono ml-2" id="diskStat">0<span class="text-xl text-[#00d4ff] font-bold ml-1">%</span></p>
+    </div>
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden fade-up d4 hover:border-purple-500/25 transition-colors">
+        <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-purple-500 rounded-l-xl"></div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-2 ml-2">Last Beacon</p>
+        <p class="text-2xl font-bold text-slate-300 mt-1 font-mono ml-2" id="updateTime">--:--:--</p>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Line charts -->
+    <div class="lg:col-span-2 space-y-5">
+        <div class="glass-panel hover-card rounded-xl p-6 fade-up d5">
+            <div class="flex items-center justify-between mb-5">
+                <p class="text-xs font-bold text-wt-muted uppercase tracking-widest">CPU Stream</p>
+                <span class="pill bg-blue-500/10 border border-blue-500/20 text-blue-400">Real-time</span>
+            </div>
+            <div class="h-52 bg-wt-bg/60 rounded-lg p-1">
+                <canvas id="cpuChart"></canvas>
+            </div>
+        </div>
+        <div class="glass-panel hover-card rounded-xl p-6 fade-up d6">
+            <div class="flex items-center justify-between mb-5">
+                <p class="text-xs font-bold text-wt-muted uppercase tracking-widest">RAM Stream</p>
+                <span class="pill bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">Real-time</span>
+            </div>
+            <div class="h-52 bg-wt-bg/60 rounded-lg p-1">
+                <canvas id="ramChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doughnut -->
+    <div class="glass-panel hover-card rounded-xl p-6 flex flex-col fade-up d5">
+        <div class="flex items-center justify-between mb-5">
+            <p class="text-xs font-bold text-wt-muted uppercase tracking-widest">Storage Volume</p>
+            <span class="pill bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff]">Disk</span>
+        </div>
+
+        <div class="relative flex-1 flex items-center justify-center min-h-[220px]">
+            <canvas id="diskChart" class="z-10"></canvas>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
+                <span class="text-4xl font-light text-white font-mono" id="centerDiskText">0%</span>
+                <span class="text-[10px] font-bold text-[#00d4ff] uppercase tracking-widest mt-1">Used</span>
+            </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 gap-3">
+            <div class="bg-wt-bg/60 rounded-xl p-3 text-center border border-wt-border">
+                <p class="text-[10px] text-wt-muted uppercase tracking-widest mb-1">Used</p>
+                <p class="text-xl font-bold text-[#00d4ff] font-mono" id="legendUsed">0%</p>
+            </div>
+            <div class="bg-wt-bg/60 rounded-xl p-3 text-center border border-wt-border">
+                <p class="text-[10px] text-wt-muted uppercase tracking-widest mb-1">Free</p>
+                <p class="text-xl font-bold text-wt-muted font-mono" id="legendFree">100%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Advanced Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6 pb-6">
+    <!-- CSS Heatmap (spans 2) -->
+    <div class="lg:col-span-2 glass-panel hover-card rounded-xl p-6 fade-up d6 flex flex-col hover:border-amber-500/25 transition-colors">
+        <div class="flex items-center justify-between mb-5">
+            <p class="text-xs font-bold text-wt-muted uppercase tracking-widest">CPU Heatmap (Recent Activity)</p>
+            <span class="pill bg-amber-500/10 border border-amber-500/20 text-amber-400">Analysis</span>
+        </div>
+        <div class="flex-1 w-full bg-wt-bg/60 rounded-lg p-3 border border-wt-border/50 shadow-[inset_0_0_12px_rgba(0,0,0,0.4)] overflow-hidden">
+            <div id="cpuHeatmap" class="flex flex-wrap gap-1 items-start justify-start content-start w-full h-[140px]">
+                <!-- JS will append small squares here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Radar Chart (spans 1) -->
+    <div class="glass-panel hover-card rounded-xl p-6 flex flex-col fade-up d6 hover:border-rose-500/25 transition-colors">
+         <div class="flex items-center justify-between mb-5">
+            <p class="text-xs font-bold text-wt-muted uppercase tracking-widest">System Balance</p>
+            <span class="pill bg-rose-500/10 border border-rose-500/20 text-rose-400">Snapshot</span>
+        </div>
+        <div class="relative flex-1 flex items-center justify-center min-h-[160px] bg-wt-bg/60 rounded-lg p-2 border border-wt-border/50">
+            <canvas id="radarChart" class="z-10"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const cpuCtx  = document.getElementById("cpuChart");
+const ramCtx  = document.getElementById("ramChart");
+const diskCtx = document.getElementById("diskChart");
+const radarCtx = document.getElementById("radarChart");
+let cpuData = [], ramData = [], labels = [];
+
+const gridColor = 'rgba(255,255,255,0.03)';
+const tickColor = '#334155';
+
+const lineOpts = (color) => ({
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            mode: 'index', intersect: false,
+            backgroundColor: 'rgba(13,20,36,0.95)',
+            titleFont: { family: 'JetBrains Mono', size: 11 },
+            bodyFont:  { family: 'JetBrains Mono', size: 11 },
+            borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1,
+            padding: 10
+        }
+    },
+    scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, maxTicksLimit: 8 } },
+        y: { beginAtZero: true, max: 100, border: { display: false },
+             grid: { color: gridColor },
+             ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, padding: 8, callback: v => v + '%' } }
+    },
+    interaction: { mode: 'nearest', axis: 'x', intersect: false },
+    animation: { duration: 350, easing: 'easeInOutQuart' }
+});
+
+const mkDataset = (data, color, label) => ({
+    label, data,
+    borderColor: color,
+    backgroundColor: color + '10',
+    borderWidth: 2,
+    tension: 0.45,
+    fill: true,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    pointHoverBackgroundColor: color,
+});
+
+const cpuChart  = new Chart(cpuCtx,  { type: 'line', data: { labels, datasets: [mkDataset(cpuData,  '#60a5fa', 'CPU %')] }, options: lineOpts('#60a5fa') });
+const ramChart  = new Chart(ramCtx,  { type: 'line', data: { labels, datasets: [mkDataset(ramData,  '#34d399', 'RAM %')] }, options: lineOpts('#34d399') });
+const diskChart = new Chart(diskCtx, {
+    type: 'doughnut',
+    data: { labels: ['Used', 'Free'], datasets: [{ data: [0, 100], backgroundColor: ['#00d4ff', 'rgba(255,255,255,0.04)'], borderColor: ['#00d4ff', 'rgba(255,255,255,0.06)'], borderWidth: 1, cutout: '82%', hoverOffset: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+});
+
+const radarChart = new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+        labels: ['CPU', 'RAM', 'DSK'],
+        datasets: [{
+            data: [0, 0, 0],
+            backgroundColor: 'rgba(251, 113, 133, 0.2)', // rose-400
+            borderColor: '#fb7185',
+            pointBackgroundColor: '#fb7185',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#fb7185',
+            borderWidth: 1.5,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            r: {
+                angleLines: { color: 'rgba(255,255,255,0.05)' },
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                pointLabels: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } },
+                ticks: { display: false, max: 100, min: 0 }
+            }
+        }
+    }
+});
+
+function updateHeatmap(cpuVal) {
+    const heatmap = document.getElementById('cpuHeatmap');
+    let colorClass = 'bg-blue-500/10 border-blue-500/20'; // < 40% (Cool)
+    if (cpuVal >= 40) colorClass = 'bg-emerald-500/40 border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]'; // Moderate
+    if (cpuVal >= 70) colorClass = 'bg-amber-500/60 border-amber-500/70 shadow-[0_0_12px_rgba(245,158,11,0.5)]'; // High
+    if (cpuVal >= 90) colorClass = 'bg-rose-500/80 border-rose-500/90 shadow-[0_0_16px_rgba(225,29,72,0.8)]'; // Critical
+
+    const block = document.createElement('div');
+    block.className = `w-4 h-4 rounded-[3px] border ${colorClass} transition-all duration-300 transform scale-0`;
+    heatmap.appendChild(block);
+    
+    // Animate in
+    setTimeout(() => block.classList.remove('scale-0'), 10);
+
+    // Keep only last ~90 items to fit in the box nicely
+    if (heatmap.children.length > 90) {
+        heatmap.removeChild(heatmap.firstChild);
+    }
+}
+
+async function fetchData() {
+    try {
+        const res  = await fetch('/api/system-data/');
+        const data = await res.json();
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        document.getElementById('cpuStat').innerHTML  = data.cpu  + '<span class="text-xl text-blue-400 font-bold ml-1">%</span>';
+        document.getElementById('ramStat').innerHTML  = data.ram  + '<span class="text-xl text-emerald-400 font-bold ml-1">%</span>';
+        document.getElementById('diskStat').innerHTML = data.disk + '<span class="text-xl text-[#00d4ff] font-bold ml-1">%</span>';
+        document.getElementById('updateTime').innerText = time;
+        document.getElementById('topStatus').innerText  = 'LIVE · ' + time;
+        document.getElementById('centerDiskText').innerText = data.disk + '%';
+        document.getElementById('legendUsed').innerText = data.disk + '%';
+        document.getElementById('legendFree').innerText = (100 - data.disk) + '%';
+
+        labels.push(time); cpuData.push(data.cpu); ramData.push(data.ram);
+        if (labels.length > 20) { labels.shift(); cpuData.shift(); ramData.shift(); }
+
+        cpuChart.update(); ramChart.update();
+        
+        diskChart.data.datasets[0].data = [data.disk, 100 - data.disk];
+        diskChart.update();
+        
+        radarChart.data.datasets[0].data = [data.cpu, data.ram, data.disk];
+        radarChart.update();
+        
+        updateHeatmap(data.cpu);
+
+    } catch(e) {
+        document.getElementById('topStatus').innerText = 'Connection error';
+    }
+}
+
+setInterval(fetchData, 3000);
+fetchData();
+</script>
+{% endblock %}

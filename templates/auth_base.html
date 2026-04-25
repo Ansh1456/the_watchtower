@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}The Watchtower{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wt: { bg: '#040812', cyan: '#00d4ff', card: '#0a101d', border: '#121c32' }
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: #040812;
+            overflow: hidden;
+        }
+
+        .glass {
+            background: rgba(10, 16, 29, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.8), inset 0 0 32px rgba(0, 212, 255, 0.02);
+        }
+
+        /* Radar Animations */
+        @keyframes scan {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes radar-ping {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+                box-shadow: 0 0 15px currentColor;
+            }
+        }
+
+        .radar-scanner {
+            background: conic-gradient(from 0deg, transparent 70%, rgba(0, 212, 255, 0.4) 100%, rgba(0, 212, 255, 0.8) 100%);
+            border-radius: 50%;
+            animation: scan 4s linear infinite;
+        }
+
+        .blip-1 {
+            animation: radar-ping 4s infinite;
+            animation-delay: 0.5s;
+        }
+
+        .blip-2 {
+            animation: radar-ping 4s infinite;
+            animation-delay: 1.8s;
+        }
+
+        .blip-3 {
+            animation: radar-ping 4s infinite;
+            animation-delay: 2.9s;
+        }
+
+        .blip-4 {
+            animation: radar-ping 4s infinite;
+            animation-delay: 3.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        /* Seamless transition bridge from landing page fade to black */
+        #auth-page-entrance {
+            position: fixed;
+            inset: 0;
+            background: #010205; /* Explicit matching black screen from landing.html */
+            z-index: 1000;
+            pointer-events: none;
+            animation: authPageReveal 1.5s ease-out forwards;
+        }
+
+        @keyframes authPageReveal {
+            from { opacity: 1; }
+            to { opacity: 0; display: none; }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen font-sans text-slate-300 relative flex bg-wt-bg">
+
+    <!-- Bridge transition from landing page -->
+    <div id="auth-page-entrance"></div>
+
+    <!-- Left Column: Realistic Radar System -->
+    <div
+        class="hidden lg:flex w-1/2 relative items-center justify-center border-r border-[#00d4ff]/10 bg-gradient-to-br from-wt-bg to-[#0a1526] overflow-hidden">
+
+        <!-- Radar Grid -->
+        <div class="absolute inset-0 opacity-20"
+            style="background-image: linear-gradient(rgba(0, 212, 255, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.3) 1px, transparent 1px); background-size: 40px 40px;">
+        </div>
+
+        <!-- The Radar Display -->
+        <div
+            class="relative w-[500px] h-[500px] xl:w-[650px] xl:h-[650px] flex items-center justify-center rounded-full border border-[#00d4ff]/30 shadow-[0_0_80px_rgba(0,212,255,0.1)]">
+            <!-- Concentric Rings -->
+            <div class="absolute w-[75%] h-[75%] rounded-full border border-[#00d4ff]/20"></div>
+            <div class="absolute w-[50%] h-[50%] rounded-full border border-[#00d4ff]/30"></div>
+            <div class="absolute w-[25%] h-[25%] rounded-full border border-[#00d4ff]/40"></div>
+
+            <!-- Crosshairs -->
+            <div class="absolute w-full h-[1px] bg-[#00d4ff]/30"></div>
+            <div class="absolute h-full w-[1px] bg-[#00d4ff]/30"></div>
+
+            <!-- Center Dot -->
+            <div class="absolute w-2 h-2 bg-[#00d4ff] rounded-full shadow-[0_0_10px_#00d4ff] z-20"></div>
+
+            <!-- Sweeping Scanner Line -->
+            <div class="absolute inset-0 radar-scanner z-10 transition-transform origin-center"></div>
+
+            <!-- Tracking Blips -->
+            <div class="absolute top-[30%] left-[20%] w-2 h-2 rounded-full bg-emerald-400 text-emerald-400 blip-1 z-20">
+            </div>
+            <div class="absolute top-[65%] left-[80%] w-2 h-2 rounded-full bg-emerald-400 text-emerald-400 blip-2 z-20">
+            </div>
+            <div class="absolute top-[18%] left-[60%] w-2.5 h-2.5 rounded-full bg-amber-400 text-amber-400 blip-3 z-20">
+            </div>
+            <div class="absolute top-[75%] left-[30%] w-1.5 h-1.5 rounded-full bg-[#00d4ff] text-[#00d4ff] blip-4 z-20">
+            </div>
+
+            <!-- Overlay Text -->
+            <div
+                class="absolute top-4 left-4 text-[10px] text-[#00d4ff] font-mono tracking-widest uppercase opacity-70">
+                Lat: 28.6139 | Lng: 77.2090<br>SYS: WATCHTOWER v3.0
+            </div>
+            <div
+                class="absolute bottom-4 right-4 text-[10px] text-emerald-400 font-mono tracking-widest uppercase opacity-70">
+                SIGNAL: SECURE<br>NODES: 4 ACTIVE
+            </div>
+        </div>
+
+        <div class="absolute bottom-12 left-12">
+            <h1 class="text-4xl font-bold text-white tracking-widest uppercase flex items-center gap-3">
+                <i class="fas fa-tower-observation text-[#00d4ff]"></i> The Watchtower
+            </h1>
+            <p class="text-sm text-[#00d4ff] font-mono uppercase tracking-widest mt-2 opacity-80">Global Monitoring
+                Infrastructure</p>
+        </div>
+    </div>
+
+    <!-- Right Column: Glassmorphism Forms -->
+    <div class="w-full lg:w-1/2 min-h-screen relative flex items-center justify-center p-6 sm:p-12">
+        <!-- Deep background glow for right side -->
+        <div
+            class="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,rgba(0,212,255,0.1),transparent_50%)] pointer-events-none">
+        </div>
+
+        <div class="w-full max-w-md z-10 fade-in">
+            {% if messages %}
+            <div class="mb-6 space-y-3">
+                {% for msg in messages %}
+                <div class="flex items-center gap-3 px-5 py-3.5 rounded-xl text-sm border backdrop-blur-md
+                    {% if msg.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-300
+                    {% elif msg.tags == 'success' %}bg-emerald-500/10 border-emerald-500/30 text-emerald-300
+                    {% else %}bg-[#00d4ff]/10 border-[#00d4ff]/30 text-[#00d4ff]{% endif %}">
+                    <i
+                        class="fas {% if msg.tags == 'error' %}fa-circle-xmark{% elif msg.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %} shrink-0 text-lg"></i>
+                    {{ msg }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Auth Form Block Injection -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+</body>
+
+</html>

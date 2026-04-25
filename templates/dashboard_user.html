@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}User Dashboard{% endblock %}
+{% block page_title %}
+    <i class="fas fa-gauge-high text-[#00d4ff] mr-2"></i> Operator Dashboard
+{% endblock %}
+
+{% block topbar_extra %}
+<form action="{% url 'export_telemetry' %}" method="GET" class="flex items-center gap-2">
+    <select name="format" class="glass-panel hover-card text-slate-300 text-xs rounded-lg px-3 py-1.5 outline-none cursor-pointer font-mono">
+        <option value="csv">.CSV</option>
+    </select>
+    <button type="submit" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide
+                                  bg-[#00d4ff]/10 border border-[#00d4ff]/25 text-[#00d4ff]
+                                  hover:bg-[#00d4ff]/20 transition-all">
+        <i class="fas fa-file-arrow-down"></i> Export
+    </button>
+</form>
+{% endblock %}
+
+{% block content %}
+
+<!-- Welcome -->
+<div class="mb-7 fade-up d1">
+    <h2 class="text-xl font-semibold text-white">
+        Welcome back, <span class="text-[#00d4ff]">{{ request.user.username }}</span>
+    </h2>
+    <p class="text-sm text-wt-muted mt-1">Real-time system resource overview for your machine.</p>
+</div>
+
+<!-- Core metrics -->
+<p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest mb-3 fade-up d1">Core Infrastructure</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+
+    <!-- CPU -->
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden stripe fade-up d2 hover:border-blue-500/30 transition-colors" style="--stripe:#60a5fa">
+        <div class="flex items-start justify-between mb-4">
+            <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <i class="fas fa-microchip text-sm"></i>
+            </div>
+            <span class="pill bg-blue-500/10 border border-blue-500/20 text-blue-400">Live</span>
+        </div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">CPU Usage</p>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.cpu_usage }}<span class="text-base val-blue font-bold ml-1">%</span></p>
+        <div class="bar-track"><div class="bar-fill bg-blue-500" style="width:{{ data.cpu_usage }}%"></div></div>
+    </div>
+
+    <!-- RAM Total -->
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden stripe fade-up d3 hover:border-emerald-500/30 transition-colors" style="--stripe:#34d399">
+        <div class="flex items-start justify-between mb-4">
+            <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <i class="fas fa-memory text-sm"></i>
+            </div>
+            <span class="pill bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">Capacity</span>
+        </div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">Total RAM</p>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.ram_total }}<span class="text-base val-green font-bold ml-1">GB</span></p>
+        <div class="bar-track"><div class="bar-fill bg-emerald-400 w-full"></div></div>
+    </div>
+
+    <!-- RAM Usage -->
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden stripe fade-up d4 hover:border-purple-500/30 transition-colors" style="--stripe:#a78bfa">
+        <div class="flex items-start justify-between mb-4">
+            <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                <i class="fas fa-bolt text-sm"></i>
+            </div>
+            <span class="pill bg-purple-500/10 border border-purple-500/20 text-purple-400">Live</span>
+        </div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">RAM Usage</p>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.ram_percent }}<span class="text-base val-purple font-bold ml-1">%</span></p>
+        <div class="bar-track"><div class="bar-fill bg-purple-500" style="width:{{ data.ram_percent }}%"></div></div>
+    </div>
+
+    <!-- Disk -->
+    <div class="glass-panel hover-card rounded-xl p-5 relative overflow-hidden stripe fade-up d5 hover:border-[#00d4ff]/30 transition-colors" style="--stripe:#00d4ff">
+        <div class="flex items-start justify-between mb-4">
+            <div class="w-9 h-9 rounded-lg bg-[#00d4ff]/10 border border-[#00d4ff]/20 flex items-center justify-center text-[#00d4ff]">
+                <i class="fas fa-hard-drive text-sm"></i>
+            </div>
+            <span class="pill bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff]">Allocated</span>
+        </div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">Disk Usage</p>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.disk_usage }}<span class="text-base val-cyan font-bold ml-1">%</span></p>
+        <div class="bar-track"><div class="bar-fill bg-[#00d4ff]" style="width:{{ data.disk_usage }}%"></div></div>
+    </div>
+</div>
+
+<!-- Network -->
+<div class="flex items-center justify-between mb-3 fade-up d5">
+    <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest">Network Telemetry</p>
+    <button id="speedTestBtn" onclick="runSpeedTest()"
+            class="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide
+                   glass-panel hover-card text-wt-muted
+                   hover:text-white hover:border-slate-600 transition-all">
+        <i class="fas fa-satellite-dish" id="speedIcon"></i> <span id="speedLabel">Run Speed Test</span>
+    </button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 fade-up d6">
+    <div class="glass-panel hover-card rounded-xl p-6 hover:border-[#00d4ff]/30 transition-colors relative overflow-hidden stripe" style="--stripe:#00d4ff">
+        <div class="flex items-start justify-between mb-4">
+            <div class="w-9 h-9 rounded-lg bg-[#00d4ff]/10 border border-[#00d4ff]/20 flex items-center justify-center text-[#00d4ff]">
+                <i class="fas fa-arrow-down text-sm"></i>
+            </div>
+            <span class="pill bg-wt-dim border border-wt-border text-wt-muted" id="dlBadge">Awaiting test</span>
+        </div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">Download Speed</p>
+        <p class="text-3xl font-light text-white font-mono" id="dlVal">—<span class="text-base val-cyan font-bold ml-1">Mbps</span></p>
+    </div>
+
+    <div class="glass-panel hover-card rounded-xl p-6 hover:border-fuchsia-500/30 transition-colors relative overflow-hidden stripe" style="--stripe:#e879f9">
+        <div class="flex items-start justify-between mb-4">
+            <div class="w-9 h-9 rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400">
+                <i class="fas fa-arrow-up text-sm"></i>
+            </div>
+            <span class="pill bg-wt-dim border border-wt-border text-wt-muted" id="ulBadge">Awaiting test</span>
+        </div>
+        <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">Upload Speed</p>
+        <p class="text-3xl font-light text-white font-mono" id="ulVal">—<span class="text-base val-fuchsia font-bold ml-1">Mbps</span></p>
+    </div>
+</div>
+
+<script>
+async function runSpeedTest() {
+    const btn = document.getElementById('speedTestBtn');
+    const icon = document.getElementById('speedIcon');
+    const label = document.getElementById('speedLabel');
+    const dlBadge = document.getElementById('dlBadge');
+    const ulBadge = document.getElementById('ulBadge');
+
+    btn.disabled = true;
+    icon.className = 'fas fa-spinner fa-spin';
+    label.textContent = 'Testing...';
+    dlBadge.textContent = 'Testing...';
+    ulBadge.textContent = 'Testing...';
+
+    try {
+        const res = await fetch('/api/network-speed/');
+        const data = await res.json();
+
+        // network speed is optional — show if present
+        if (data.download !== undefined) {
+            document.getElementById('dlVal').innerHTML = data.download + '<span class="text-base val-cyan font-bold ml-1">Mbps</span>';
+            document.getElementById('ulVal').innerHTML = data.upload + '<span class="text-base val-fuchsia font-bold ml-1">Mbps</span>';
+            dlBadge.textContent = 'Last Test';
+            ulBadge.textContent = 'Last Test';
+        } else {
+            dlBadge.textContent = 'N/A';
+            ulBadge.textContent = 'N/A';
+        }
+    } catch(e) {
+        dlBadge.textContent = 'Error';
+        ulBadge.textContent = 'Error';
+    }
+
+    icon.className = 'fas fa-satellite-dish';
+    label.textContent = 'Run Again';
+    btn.disabled = false;
+}
+</script>
+
+{% endblock %}
