@@ -25,7 +25,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: PYTHON_VERSION
-        value: "3.11.2"
+        value: "3.11.11"
       - key: CELERY_BROKER_URL
         sync: false # User must input this manually from Upstash
       - key: CELERY_RESULT_BACKEND
