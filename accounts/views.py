@@ -90,30 +90,26 @@ def system_info_page(request):
 @login_required
 def system_data_api(request):
     # Transitioning to Remote Agent Architecture (v3.0)
-    # Instead of pulling local psutil metrics, we now aggregate live metrics from
-    # safely authenticated agents posting to our /api/telemetry/push/ network!
-
-    from accounts.models import UserProfile
-    from django.db.models import Avg
-
-    import psutil
+    # Pull accurate live telemetry from the authenticated user's remote agent
     
-    aggs = UserProfile.objects.aggregate(
-        avg_ram=Avg('latest_ram'),
-        avg_disk=Avg('latest_disk')
-    )
+    from accounts.models import UserProfile
+    import psutil
 
-    # Use live local CPU for the chart to look dynamic, instead of steady aggregate load
-    live_cpu = psutil.cpu_percent(interval=0.1)
-
-    # Fallbacks if no agents have reported yet
-    avg_ram = aggs['avg_ram'] if aggs['avg_ram'] else 0.0
-    avg_disk = aggs['avg_disk'] if aggs['avg_disk'] else 15.0
+    try:
+        profile = request.user.userprofile
+        cpu = profile.latest_cpu if profile.latest_cpu else 0.0
+        ram = profile.latest_ram if profile.latest_ram else 0.0
+        disk = profile.latest_disk if profile.latest_disk else 0.0
+    except UserProfile.DoesNotExist:
+        # Fallback to local if no profile
+        cpu = psutil.cpu_percent(interval=0.1)
+        ram = psutil.virtual_memory().percent
+        disk = psutil.disk_usage('/').percent
 
     return JsonResponse({
-        "cpu": live_cpu,
-        "ram": round(avg_ram, 1),
-        "disk": round(avg_disk, 1)
+        "cpu": cpu,
+        "ram": ram,
+        "disk": disk
     })
 
 @login_required
@@ -354,6 +350,13 @@ class PushTelemetryView(APIView):
         disk = request.data.get('disk')
         disk_total = request.data.get('disk_total')
         disk_free = request.data.get('disk_free')
+        
+        # Static Hardware Info
+        os_sys = request.data.get('os_sys')
+        processor = request.data.get('processor')
+        cores = request.data.get('cores')
+        ram_total = request.data.get('ram_total')
+        uptime = request.data.get('uptime')
 
         if cpu is None or ram is None or disk is None:
             return Response({"error": "Missing parameters"}, status=400)
@@ -375,6 +378,19 @@ class PushTelemetryView(APIView):
             profile.latest_disk_total = float(disk_total)
         if disk_free is not None:
             profile.latest_disk_free = float(disk_free)
+            
+        # Update static hardware info if provided
+        if os_sys is not None:
+            profile.os_sys = os_sys
+        if processor is not None:
+            profile.processor = processor
+        if cores is not None:
+            profile.cores = int(cores)
+        if ram_total is not None:
+            profile.ram_total = float(ram_total)
+        if uptime is not None:
+            profile.uptime_hours = float(uptime)
+            
         profile.save()
 
         return Response({"status": "success", "timestamp": timezone.now()})

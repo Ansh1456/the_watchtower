@@ -24,6 +24,13 @@ class UserProfile(models.Model):
     latest_disk = models.FloatField(default=0.0)
     latest_disk_total = models.FloatField(null=True, blank=True)
     latest_disk_free = models.FloatField(null=True, blank=True)
+    
+    # Static Hardware Info
+    os_sys = models.CharField(max_length=50, null=True, blank=True)
+    processor = models.CharField(max_length=255, null=True, blank=True)
+    cores = models.IntegerField(null=True, blank=True)
+    ram_total = models.FloatField(null=True, blank=True)
+    uptime_hours = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.user.username
