@@ -1,10 +1,30 @@
 import platform
+import os
 import psutil
 import time
 import speedtest
+import subprocess
 from django.core.cache import cache
 from accounts.models import SystemLog
 from django.utils import timezone
+
+def get_processor_name():
+    if platform.system() == "Windows":
+        return platform.processor()
+    elif platform.system() == "Darwin":
+        try:
+            return subprocess.check_output(['sysctl', '-n', 'machdep.cpu.brand_string']).strip().decode()
+        except:
+            return platform.processor()
+    elif platform.system() == "Linux":
+        try:
+            with open('/proc/cpuinfo', 'r') as f:
+                for line in f:
+                    if 'model name' in line:
+                        return line.split(':')[1].strip()
+        except:
+            pass
+    return platform.processor() or "Unknown Processor"
 
 def get_network_speed():
     try:
@@ -36,7 +56,7 @@ def get_system_info():
     
     info = {
         "os": platform.system(),
-        "processor": platform.processor(),
+        "processor": get_processor_name(),
         "cpu_usage": cpu,
         "cpu_cores": psutil.cpu_count(),
         "ram_total": round(psutil.virtual_memory().total / (1024**3), 2),
@@ -70,6 +90,18 @@ def get_user_system_info(user=None):
                 info['disk_total'] = profile.latest_disk_total
             if profile.latest_disk_free and profile.latest_disk_free > 0:
                 info['disk_free'] = profile.latest_disk_free
+                
+            # Override with static hardware info from agent
+            if profile.os_sys:
+                info['os'] = profile.os_sys
+            if profile.processor:
+                info['processor'] = profile.processor
+            if profile.cores:
+                info['cpu_cores'] = profile.cores
+            if profile.ram_total:
+                info['ram_total'] = profile.ram_total
+            if profile.uptime_hours is not None:
+                info['uptime'] = profile.uptime_hours
         except:
             pass
     return info
