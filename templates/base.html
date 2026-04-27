@@ -311,6 +311,10 @@
         });
 
         // GPS Tracking Feature
+        // Disabled: This feature overwrote the server's tracking location when logging in
+        // from a mobile device (or any other browser), confusing users who expected their
+        // UserProfile to represent their monitored infrastructure, not their current phone location.
+        /*
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(position) {
@@ -364,6 +368,7 @@
         } else {
             console.warn("Geolocation is not supported by this browser.");
         }
+        */
     });
 </script>
 
