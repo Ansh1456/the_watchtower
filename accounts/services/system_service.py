@@ -2,11 +2,16 @@ import platform
 import os
 import psutil
 import time
-import speedtest
 import subprocess
 from django.core.cache import cache
 from accounts.models import SystemLog
 from django.utils import timezone
+
+try:
+    import speedtest as _speedtest_module
+except Exception:
+    _speedtest_module = None  # speedtest unavailable — get_network_speed() returns zeros
+
 
 def get_processor_name():
     if platform.system() == "Windows":
@@ -27,8 +32,10 @@ def get_processor_name():
     return platform.processor() or "Unknown Processor"
 
 def get_network_speed():
+    if _speedtest_module is None:
+        return {"download": 0, "upload": 0}
     try:
-        st = speedtest.Speedtest()
+        st = _speedtest_module.Speedtest()
         download = st.download() / 1_000_000  # Mbps
         upload = st.upload() / 1_000_000      # Mbps
         return {
