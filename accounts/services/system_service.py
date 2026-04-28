@@ -76,46 +76,68 @@ def get_system_info():
     return info
 
 def get_user_system_info(user=None):
-    info = get_system_info().copy()
-    info['data_source'] = 'server'  # Track data origin
-    
-    if user:
-        try:
-            profile = user.userprofile
-            # Only use agent data if it has been populated (non-zero values)
-            has_agent_data = False
-            
-            if profile.latest_cpu and profile.latest_cpu > 0:
-                info['cpu_usage'] = profile.latest_cpu
-                has_agent_data = True
-            if profile.latest_ram and profile.latest_ram > 0:
-                info['ram_percent'] = profile.latest_ram
-                has_agent_data = True
-            if profile.latest_disk and profile.latest_disk > 0:
-                info['disk_usage'] = profile.latest_disk
-                has_agent_data = True
-            if profile.latest_disk_total and profile.latest_disk_total > 0:
-                info['disk_total'] = profile.latest_disk_total
-            if profile.latest_disk_free and profile.latest_disk_free > 0:
-                info['disk_free'] = profile.latest_disk_free
-                
-            # Override with static hardware info from agent
-            if profile.os_sys:
-                info['os'] = profile.os_sys
-                has_agent_data = True
-            if profile.processor:
-                info['processor'] = profile.processor
-            if profile.cores:
-                info['cpu_cores'] = profile.cores
-            if profile.ram_total:
-                info['ram_total'] = profile.ram_total
-            if profile.uptime_hours is not None:
-                info['uptime'] = profile.uptime_hours
-            
-            if has_agent_data:
-                info['data_source'] = 'agent'
-        except:
-            pass
+    """
+    Returns system info sourced exclusively from the user's remote agent telemetry.
+    If no agent data has been pushed yet, returns a placeholder dict with
+    data_source='no_agent' so the template can display a friendly "connect your
+    agent" message instead of showing the Render server's own CPU/RAM/disk stats.
+    """
+    # Safe placeholder — no psutil values leak through
+    placeholder = {
+        "data_source": "no_agent",
+        "os": "—",
+        "processor": "—",
+        "cpu_usage": None,
+        "cpu_cores": None,
+        "ram_total": None,
+        "ram_percent": None,
+        "disk_usage": None,
+        "disk_total": None,
+        "disk_free": None,
+        "uptime": None,
+    }
+
+    if not user:
+        return placeholder
+
+    try:
+        profile = user.userprofile
+    except Exception:
+        return placeholder
+
+    has_agent_data = False
+    info = placeholder.copy()
+
+    if profile.latest_cpu and profile.latest_cpu > 0:
+        info["cpu_usage"] = profile.latest_cpu
+        has_agent_data = True
+    if profile.latest_ram and profile.latest_ram > 0:
+        info["ram_percent"] = profile.latest_ram
+        has_agent_data = True
+    if profile.latest_disk and profile.latest_disk > 0:
+        info["disk_usage"] = profile.latest_disk
+        has_agent_data = True
+    if profile.latest_disk_total and profile.latest_disk_total > 0:
+        info["disk_total"] = profile.latest_disk_total
+    if profile.latest_disk_free and profile.latest_disk_free > 0:
+        info["disk_free"] = profile.latest_disk_free
+
+    # Static hardware info sent by the agent on first ping
+    if profile.os_sys:
+        info["os"] = profile.os_sys
+        has_agent_data = True
+    if profile.processor:
+        info["processor"] = profile.processor
+    if profile.cores:
+        info["cpu_cores"] = profile.cores
+    if profile.ram_total:
+        info["ram_total"] = profile.ram_total
+    if profile.uptime_hours is not None:
+        info["uptime"] = profile.uptime_hours
+
+    if has_agent_data:
+        info["data_source"] = "agent"
+
     return info
 
 def get_top_processes(limit=5):
