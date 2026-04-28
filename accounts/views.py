@@ -180,6 +180,7 @@ def register_view(request):
         print("OTP:", otp)
 
         request.session["otp"] = otp
+        request.session["email"] = email
         request.session["reg_data"] = {
             "fullname": fullname,
             "username": username,
@@ -187,6 +188,7 @@ def register_view(request):
             "password": password
         }
 
+        messages.info(request, "Verification code sent to your email. Check spam if not found.")
         return redirect("verify_otp")
 
     return render(request, "register.html")
@@ -195,7 +197,8 @@ def register_view(request):
 def verify_otp(request):
 
     # prevent direct access
-    if not request.session.get("otp"):
+    if not request.session.get("otp") or not request.session.get("reg_data"):
+        messages.error(request, "Session expired. Please register again.")
         return redirect("register")
 
     if request.method == "POST":
@@ -221,12 +224,13 @@ def verify_otp(request):
 
             request.session.pop("otp", None)
             request.session.pop("reg_data", None)
+            request.session.pop("email", None)
 
-            messages.success(request, "Account created successfully")
+            messages.success(request, "Account created successfully!")
             return redirect("login")
 
         else:
-            messages.error(request, "Invalid OTP")
+            messages.error(request, "Invalid verification code. Try again.")
 
     return render(request, "verify_otp.html")
 
@@ -272,13 +276,20 @@ from django.conf import settings
 def resend_otp(request):
 
     email = request.session.get("email")
+    
+    # Fallback to getting email from reg_data if not in email key
+    if not email:
+        reg_data = request.session.get("reg_data")
+        if reg_data:
+            email = reg_data.get("email")
 
     if not email:
+        messages.error(request, "No email found. Please register again.")
         return redirect("register")
 
     otp = generate_and_send_otp(email)
-
     request.session["otp"] = otp
+    messages.success(request, "New code sent. Check your email.")
 
     return redirect("verify_otp")
 
