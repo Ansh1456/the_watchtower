@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
 import random
 
 class SystemLog(models.Model):
@@ -67,4 +68,13 @@ def save_user_profile(sender, instance, **kwargs):
         lat, lon = random.choice(CITIES)
         lat += random.uniform(-0.05, 0.05)
         lon += random.uniform(-0.05, 0.05)
-        UserProfile.objects.create(user=instance, latitude=lat, longitude=lon)
+        UserProfile.objects.create(user=instance, latitude=lat, longitude=lon)
+
+@receiver(post_save, sender=User)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+    else:
+        # Generate token for existing users if they don't have one
+        if not hasattr(instance, 'auth_token'):
+            Token.objects.create(user=instance)
