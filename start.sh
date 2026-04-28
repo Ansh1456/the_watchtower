@@ -10,8 +10,8 @@ python create_admin.py
 # Collect static files
 python manage.py collectstatic --noinput
 
-# Start Celery worker in the background
-celery -A the_watchtower worker -l info &
+# NOTE: Celery worker is now a separate Render service (watchtower-celery-worker).
+# Do NOT start it here — Render's single-process container will kill it silently.
 
 # Start Gunicorn server
 gunicorn the_watchtower.wsgi:application --bind 0.0.0.0:$PORT

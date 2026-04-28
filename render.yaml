@@ -36,3 +36,35 @@ services:
         sync: false # e.g. "admin@example.com"
       - key: ADMIN_PASS
         sync: false # Superuser password
+      - key: EMAIL_HOST_USER
+        sync: false # Gmail address used to send OTP emails
+      - key: EMAIL_HOST_PASSWORD
+        sync: false # Gmail App Password (not your account password)
+
+  - type: worker
+    name: watchtower-celery-worker
+    env: python
+    plan: free
+    region: ohio
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A the_watchtower worker -l info"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: watchtower-db
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          name: the-watchtower
+          type: web
+          envVarKey: SECRET_KEY
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEBUG
+        value: "False"
