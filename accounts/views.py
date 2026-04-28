@@ -6,8 +6,6 @@ from .services.auth_service import generate_and_send_otp
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
-import psutil
-import time
 
 
 
@@ -63,15 +61,21 @@ def admin_dashboard(request):
     active_users = User.objects.filter(is_active=True).count()
     admin_users = User.objects.filter(is_staff=True).count()
 
-    uptime_seconds = time.time() - psutil.boot_time()
-    uptime_hours = int(uptime_seconds // 3600)
+    # Use uptime from the admin's own agent telemetry.
+    # psutil.boot_time() is intentionally NOT used here — it would return
+    # the Render container's uptime, not anything meaningful for monitoring.
+    uptime_hours = None
+    try:
+        uptime_hours = request.user.userprofile.uptime_hours
+    except Exception:
+        pass
 
     context = {
         "data": system_data,
         "total_users": total_users,
         "active_users": active_users,
         "admin_users": admin_users,
-        "system_uptime": uptime_hours
+        "system_uptime": uptime_hours,  # None → template shows "—"
     }
 
     return render(request, "dashboard_admin.html", context)
@@ -89,28 +93,30 @@ def system_info_page(request):
 
 @login_required
 def system_data_api(request):
-    # Transitioning to Remote Agent Architecture (v3.0)
-    # Pull accurate live telemetry from the authenticated user's remote agent
-    
+    # Remote Agent Architecture (v3.0)
+    # Pull live telemetry from the authenticated user's remote agent only.
+    # We deliberately do NOT fall back to psutil here — that would return
+    # the Render server's own CPU/RAM/disk, which is meaningless to the user.
+
     from accounts.models import UserProfile
-    import psutil
 
     try:
         profile = request.user.userprofile
-        cpu = profile.latest_cpu if profile.latest_cpu else 0.0
-        ram = profile.latest_ram if profile.latest_ram else 0.0
-        disk = profile.latest_disk if profile.latest_disk else 0.0
+        has_data = profile.latest_cpu and profile.latest_cpu > 0
+        cpu  = profile.latest_cpu  if has_data else None
+        ram  = profile.latest_ram  if has_data else None
+        disk = profile.latest_disk if has_data else None
     except UserProfile.DoesNotExist:
-        # Fallback to local if no profile
-        cpu = psutil.cpu_percent(interval=0.1)
-        ram = psutil.virtual_memory().percent
-        disk = psutil.disk_usage('/').percent
+        cpu = ram = disk = None
+        has_data = False
 
     return JsonResponse({
-        "cpu": cpu,
-        "ram": ram,
-        "disk": disk
+        "cpu":  cpu,
+        "ram":  ram,
+        "disk": disk,
+        "data_source": "agent" if has_data else "no_agent",
     })
+
 
 @login_required
 def network_speed_api(request):
