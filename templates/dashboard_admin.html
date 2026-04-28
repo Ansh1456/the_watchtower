@@ -16,9 +16,15 @@
 {% block content %}
 
 <!-- Header -->
-<div class="mb-7 fade-up d1">
-    <h2 class="text-xl font-semibold text-white">System Overview</h2>
-    <p class="text-sm text-wt-muted mt-1">High-level metrics for all nodes and operators.</p>
+<div class="mb-7 fade-up d1 flex justify-between items-end">
+    <div>
+        <h2 class="text-xl font-semibold text-white">System Overview</h2>
+        <p class="text-sm text-wt-muted mt-1">High-level metrics for all nodes and operators.</p>
+    </div>
+    <div class="hidden sm:block text-right">
+        <p class="text-[10px] text-wt-muted uppercase tracking-widest font-bold mb-1">Your Agent Token</p>
+        <code class="bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-emerald-400 font-mono select-all">{{ request.user.auth_token.key|default:"Missing Token" }}</code>
+    </div>
 </div>
 
 {% if data.data_source == "no_agent" %}
