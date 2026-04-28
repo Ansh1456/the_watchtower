@@ -77,15 +77,23 @@ def get_system_info():
 
 def get_user_system_info(user=None):
     info = get_system_info().copy()
+    info['data_source'] = 'server'  # Track data origin
+    
     if user:
         try:
             profile = user.userprofile
+            # Only use agent data if it has been populated (non-zero values)
+            has_agent_data = False
+            
             if profile.latest_cpu and profile.latest_cpu > 0:
                 info['cpu_usage'] = profile.latest_cpu
+                has_agent_data = True
             if profile.latest_ram and profile.latest_ram > 0:
                 info['ram_percent'] = profile.latest_ram
+                has_agent_data = True
             if profile.latest_disk and profile.latest_disk > 0:
                 info['disk_usage'] = profile.latest_disk
+                has_agent_data = True
             if profile.latest_disk_total and profile.latest_disk_total > 0:
                 info['disk_total'] = profile.latest_disk_total
             if profile.latest_disk_free and profile.latest_disk_free > 0:
@@ -94,6 +102,7 @@ def get_user_system_info(user=None):
             # Override with static hardware info from agent
             if profile.os_sys:
                 info['os'] = profile.os_sys
+                has_agent_data = True
             if profile.processor:
                 info['processor'] = profile.processor
             if profile.cores:
@@ -102,6 +111,9 @@ def get_user_system_info(user=None):
                 info['ram_total'] = profile.ram_total
             if profile.uptime_hours is not None:
                 info['uptime'] = profile.uptime_hours
+            
+            if has_agent_data:
+                info['data_source'] = 'agent'
         except:
             pass
     return info
