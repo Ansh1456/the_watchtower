@@ -21,6 +21,16 @@
     <p class="text-sm text-wt-muted mt-1">High-level metrics for all nodes and operators.</p>
 </div>
 
+{% if data.data_source == "no_agent" %}
+<div class="mb-6 fade-up d1 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
+    <i class="fas fa-triangle-exclamation text-amber-500 text-xl"></i>
+    <div>
+        <h4 class="text-amber-500 font-bold text-sm">Admin Agent Not Connected</h4>
+        <p class="text-wt-muted text-xs mt-0.5">We haven't received telemetry from your personal machine yet. Please ensure your remote agent is running to see your live hardware data below.</p>
+    </div>
+</div>
+{% endif %}
+
 <!-- User stat cards -->
 <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
     <div class="glass-panel hover-card rounded-xl p-5 flex items-center gap-4 fade-up d1 hover:border-blue-500/25 transition-colors">
@@ -56,7 +66,7 @@
         </div>
         <div>
             <p class="text-[10px] text-wt-muted font-bold uppercase tracking-widest">Uptime</p>
-            <p class="text-3xl font-bold text-white font-mono mt-0.5">{{ system_uptime }}<span class="text-sm text-wt-muted font-normal ml-1">h</span></p>
+            <p class="text-3xl font-bold text-white font-mono mt-0.5">{{ system_uptime|default_if_none:"—" }}<span class="text-sm text-wt-muted font-normal ml-1">h</span></p>
         </div>
     </div>
 </div>
@@ -96,19 +106,19 @@
 
     <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-blue-500/25 transition-colors">
         <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2"><i class="fas fa-microchip mr-1"></i>CPU</p>
-        <p class="text-2xl font-light text-white font-mono">{{ data.cpu_usage }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.cpu_usage|default_if_none:"—" }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
     </div>
     <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-emerald-500/25 transition-colors">
         <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2"><i class="fas fa-memory mr-1"></i>RAM Max</p>
-        <p class="text-2xl font-light text-white font-mono">{{ data.ram_total }}<span class="text-xs text-wt-muted ml-0.5">GB</span></p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.ram_total|default_if_none:"—" }}<span class="text-xs text-wt-muted ml-0.5">GB</span></p>
     </div>
     <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-purple-500/25 transition-colors">
         <p class="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-2"><i class="fas fa-bolt mr-1"></i>RAM %</p>
-        <p class="text-2xl font-light text-white font-mono">{{ data.ram_percent }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.ram_percent|default_if_none:"—" }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
     </div>
     <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-rose-500/25 transition-colors">
         <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2"><i class="fas fa-hard-drive mr-1"></i>Disk</p>
-        <p class="text-2xl font-light text-white font-mono">{{ data.disk_usage }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
+        <p class="text-2xl font-light text-white font-mono">{{ data.disk_usage|default_if_none:"—" }}<span class="text-xs text-wt-muted ml-0.5">%</span></p>
     </div>
     <div class="glass-panel hover-card rounded-xl p-4 text-center hover:border-[#00d4ff]/25 transition-colors">
         <p class="text-[10px] font-bold text-[#00d4ff] uppercase tracking-widest mb-2"><i class="fas fa-arrow-down mr-1"></i>Down</p>

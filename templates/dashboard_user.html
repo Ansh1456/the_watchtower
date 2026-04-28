@@ -27,6 +27,16 @@
     <p class="text-sm text-wt-muted mt-1">Real-time system resource overview for your machine.</p>
 </div>
 
+{% if data.data_source == "no_agent" %}
+<div class="mb-6 fade-up d1 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
+    <i class="fas fa-triangle-exclamation text-amber-500 text-xl"></i>
+    <div>
+        <h4 class="text-amber-500 font-bold text-sm">Agent Not Connected</h4>
+        <p class="text-wt-muted text-xs mt-0.5">We haven't received any telemetry from your machine yet. Please ensure your remote agent is running to see live data.</p>
+    </div>
+</div>
+{% endif %}
+
 <!-- Core metrics -->
 <p class="text-[10px] font-bold text-wt-muted uppercase tracking-widest mb-3 fade-up d1">Core Infrastructure</p>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
@@ -40,8 +50,8 @@
             <span class="pill bg-blue-500/10 border border-blue-500/20 text-blue-400">Live</span>
         </div>
         <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">CPU Usage</p>
-        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.cpu_usage }}<span class="text-base val-blue font-bold ml-1">%</span></p>
-        <div class="bar-track"><div class="bar-fill bg-blue-500" style="width:{{ data.cpu_usage }}%"></div></div>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.cpu_usage|default_if_none:"—" }}<span class="text-base val-blue font-bold ml-1">%</span></p>
+        <div class="bar-track"><div class="bar-fill bg-blue-500" style="width:{{ data.cpu_usage|default_if_none:0 }}%"></div></div>
     </div>
 
     <!-- RAM Total -->
@@ -53,7 +63,7 @@
             <span class="pill bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">Capacity</span>
         </div>
         <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">Total RAM</p>
-        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.ram_total }}<span class="text-base val-green font-bold ml-1">GB</span></p>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.ram_total|default_if_none:"—" }}<span class="text-base val-green font-bold ml-1">GB</span></p>
         <div class="bar-track"><div class="bar-fill bg-emerald-400 w-full"></div></div>
     </div>
 
@@ -66,8 +76,8 @@
             <span class="pill bg-purple-500/10 border border-purple-500/20 text-purple-400">Live</span>
         </div>
         <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">RAM Usage</p>
-        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.ram_percent }}<span class="text-base val-purple font-bold ml-1">%</span></p>
-        <div class="bar-track"><div class="bar-fill bg-purple-500" style="width:{{ data.ram_percent }}%"></div></div>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.ram_percent|default_if_none:"—" }}<span class="text-base val-purple font-bold ml-1">%</span></p>
+        <div class="bar-track"><div class="bar-fill bg-purple-500" style="width:{{ data.ram_percent|default_if_none:0 }}%"></div></div>
     </div>
 
     <!-- Disk -->
@@ -79,8 +89,8 @@
             <span class="pill bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff]">Allocated</span>
         </div>
         <p class="text-xs font-bold text-wt-muted uppercase tracking-widest mb-1">Disk Usage</p>
-        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.disk_usage }}<span class="text-base val-cyan font-bold ml-1">%</span></p>
-        <div class="bar-track"><div class="bar-fill bg-[#00d4ff]" style="width:{{ data.disk_usage }}%"></div></div>
+        <p class="text-3xl font-light text-white font-mono kpi-counter">{{ data.disk_usage|default_if_none:"—" }}<span class="text-base val-cyan font-bold ml-1">%</span></p>
+        <div class="bar-track"><div class="bar-fill bg-[#00d4ff]" style="width:{{ data.disk_usage|default_if_none:0 }}%"></div></div>
     </div>
 </div>
 
