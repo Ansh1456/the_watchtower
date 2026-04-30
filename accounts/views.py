@@ -13,11 +13,9 @@ from django.contrib.auth.models import User
 
 
 # LANDING PAGE (3D Cinematic)
+# Always show the landing page — authenticated users are NOT auto-redirected.
+# They can choose to enter via the CTA button which links to their dashboard.
 def landing_page(request):
-    if request.user.is_authenticated:
-        if request.user.is_superuser:
-            return redirect("admin_dashboard")
-        return redirect("user_dashboard")
     return render(request, "landing.html")
 
 # LOGIN PAGE
