@@ -95,6 +95,11 @@
         <div id="webgl-fallback">
             <p>Your browser does not support WebGL. <br> Redirecting...</p>
         </div>
+        <!-- Smart routing target injected by Django -->
+        <span id="auth-destination"
+              data-auth="{{ request.user.is_authenticated|yesno:'true,false' }}"
+              data-admin="{{ request.user.is_superuser|yesno:'true,false' }}"
+              style="display:none"></span>
     </div>
 
     <!-- Three.js + PostProcessing via CDN -->
@@ -117,9 +122,20 @@
             }
         }
 
+        // Determine smart redirect destination based on auth state
+        function getDestination() {
+            const el = document.getElementById('auth-destination');
+            if (!el) return '/login/';
+            const isAuth  = el.dataset.auth  === 'true';
+            const isAdmin = el.dataset.admin === 'true';
+            if (isAuth && isAdmin) return '/admin-dashboard/';
+            if (isAuth)            return '/user/';
+            return '/login/';
+        }
+
         if (!isWebGLAvailable()) {
             document.getElementById('webgl-fallback').style.display = 'flex';
-            setTimeout(() => window.location.href = '/login/', 2000);
+            setTimeout(() => window.location.href = getDestination(), 2000);
         } else {
             initCinematicScene();
         }
@@ -418,8 +434,9 @@
                 }, 5500);
 
                 // Force hard routing underneath transition at 6s
+                // Smart-routes: authenticated users go to their dashboard, new users go to login
                 setTimeout(() => {
-                    window.location.href = '/login/';
+                    window.location.href = getDestination();
                 }, 7000);
             }, 100);
 

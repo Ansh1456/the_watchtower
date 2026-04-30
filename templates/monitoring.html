@@ -225,33 +225,62 @@ function updateHeatmap(cpuVal) {
 
 async function fetchData() {
     try {
-        const res  = await fetch('/api/system-data/');
+        const res  = await fetch('/api/system-data/', { credentials: 'same-origin' });
+
+        // If we got a redirect (e.g. to login page), res.url will differ from request
+        if (!res.ok && res.status !== 200) {
+            document.getElementById('topStatus').innerText = 'Auth error — refresh page';
+            return;
+        }
+
         const data = await res.json();
         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        document.getElementById('cpuStat').innerHTML  = data.cpu  + '<span class="text-xl text-blue-400 font-bold ml-1">%</span>';
-        document.getElementById('ramStat').innerHTML  = data.ram  + '<span class="text-xl text-emerald-400 font-bold ml-1">%</span>';
-        document.getElementById('diskStat').innerHTML = data.disk + '<span class="text-xl text-[#00d4ff] font-bold ml-1">%</span>';
-        document.getElementById('updateTime').innerText = time;
-        document.getElementById('topStatus').innerText  = 'LIVE · ' + time;
-        document.getElementById('centerDiskText').innerText = data.disk + '%';
-        document.getElementById('legendUsed').innerText = data.disk + '%';
-        document.getElementById('legendFree').innerText = (100 - data.disk) + '%';
+        // If agent is not connected, show banner and skip chart update
+        if (data.data_source === 'no_agent' || data.cpu === null || data.cpu === undefined) {
+            document.getElementById('topStatus').innerText = 'NO AGENT · Waiting...';
+            document.getElementById('topStatus').style.color = '#fbbf24';
+            document.getElementById('topStatus').style.borderColor = 'rgba(251,191,36,0.3)';
+            document.getElementById('topStatus').style.background = 'rgba(251,191,36,0.08)';
+            // Update the time display so user knows polling is alive
+            document.getElementById('updateTime').innerText = time;
+            return;  // Don't push nulls into chart arrays
+        }
 
-        labels.push(time); cpuData.push(data.cpu); ramData.push(data.ram);
+        const cpu  = parseFloat(data.cpu);
+        const ram  = parseFloat(data.ram);
+        const disk = parseFloat(data.disk);
+
+        // Reset status badge back to normal live style
+        document.getElementById('topStatus').innerText  = 'LIVE · ' + time;
+        document.getElementById('topStatus').style.color = '';
+        document.getElementById('topStatus').style.borderColor = '';
+        document.getElementById('topStatus').style.background = '';
+
+        document.getElementById('cpuStat').innerHTML  = cpu  + '<span class="text-xl text-blue-400 font-bold ml-1">%</span>';
+        document.getElementById('ramStat').innerHTML  = ram  + '<span class="text-xl text-emerald-400 font-bold ml-1">%</span>';
+        document.getElementById('diskStat').innerHTML = disk + '<span class="text-xl text-[#00d4ff] font-bold ml-1">%</span>';
+        document.getElementById('updateTime').innerText = time;
+        document.getElementById('centerDiskText').innerText = disk + '%';
+        document.getElementById('legendUsed').innerText = disk + '%';
+        document.getElementById('legendFree').innerText = (100 - disk).toFixed(1) + '%';
+
+        // Push real numeric values only — never null
+        labels.push(time); cpuData.push(cpu); ramData.push(ram);
         if (labels.length > 20) { labels.shift(); cpuData.shift(); ramData.shift(); }
 
         cpuChart.update(); ramChart.update();
         
-        diskChart.data.datasets[0].data = [data.disk, 100 - data.disk];
+        diskChart.data.datasets[0].data = [disk, 100 - disk];
         diskChart.update();
         
-        radarChart.data.datasets[0].data = [data.cpu, data.ram, data.disk];
+        radarChart.data.datasets[0].data = [cpu, ram, disk];
         radarChart.update();
         
-        updateHeatmap(data.cpu);
+        updateHeatmap(cpu);
 
     } catch(e) {
+        console.error('Monitoring fetch error:', e);
         document.getElementById('topStatus').innerText = 'Connection error';
     }
 }
